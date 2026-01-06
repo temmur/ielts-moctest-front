@@ -12,7 +12,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.26"
+    "@supabase/supabase-js": "^2.89.0",
+    "vue": "^3.5.26",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4.1.18",

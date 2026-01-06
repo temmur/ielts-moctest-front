@@ -48,10 +48,13 @@
 
 
 <template>
-  <div class="container">
-    <h1 class="text-red-600">Hello world</h1>
-    <p class="text-xl font-bold text-violet-500">Hello dev</p>
-  </div>
+<router-view></router-view>
 </template>
 <script setup>
+import {ref} from 'vue'
+import BaseInput from "@/components/forms/BaseInput.vue";
+const password = ref('')
+const isLoading = ref(true)
+const username = ref('')
+const usernameError = ref(true)
 </script>
