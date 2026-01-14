@@ -10,6 +10,7 @@ import PReading from "@/view/test/PReading.vue"
 import PWriting from "@/view/test/PWriting.vue"
 import PTeacherPanel from "@/view/teacher/PTeacherPanel.vue"
 
+
 const routes: Array<RouteRecordRaw> = [
     {
         path: '/login',
@@ -18,34 +19,42 @@ const routes: Array<RouteRecordRaw> = [
     },
     {
         path: '/',
-        name: 'Home',
-        component: PIndex,
-        alias: ['/index', '/main', '/dashboard'],
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/test/listening',
-        name: "Listening",
-        component: PListening,
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/test/reading/:studentTestId',
-        name: "Reading",
-        component: PReading,
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/test/writing/:studentTestId',
-        name: "Writing",
-        component: PWriting,
-        meta: { requiresAuth: true }
-    },
-    {
-        path: '/teacher-panel',
-        name: "TeacherPanel",
-        component: PTeacherPanel,
-        meta: { requiresAuth: true }
+        name: "Layout",
+        component: ()=> import('@/layouts/Default/LDefault.vue'),
+        redirect: {name: 'Home'},
+        children: [
+            {
+                path: '/',
+                name: 'Home',
+                component: PIndex,
+                alias: ['/index', '/main', '/dashboard'],
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/test/listening',
+                name: "Listening",
+                component: PListening,
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/test/reading/:studentTestId',
+                name: "Reading",
+                component: PReading,
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/test/writing/:studentTestId',
+                name: "Writing",
+                component: PWriting,
+                meta: { requiresAuth: true }
+            },
+            {
+                path: '/teacher-panel',
+                name: "TeacherPanel",
+                component: PTeacherPanel,
+                meta: { requiresAuth: true }
+            },
+        ]
     },
     {
         path: '/:pathMatch(.*)*',

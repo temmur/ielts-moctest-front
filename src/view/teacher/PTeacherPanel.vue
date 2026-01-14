@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import {useAuth} from "@/composables/useAuth";
-const { logout } = useAuth()
+import {ref, onMounted, watch} from 'vue'
 import { supabase } from '@/lib/supabase'
 import AddTestModal from "@/components/modals/AddTestModal.vue";
+import CButton from "@/components/forms/CButton.vue";
+import UploadTest from "@/components/UploadTest.vue";
 
 const loading = ref(true)
 const showAddTestModal = ref(false)
@@ -92,21 +92,29 @@ const handleTestAdded = () => {
   showAddTestModal.value = false
   loadTests()
 }
+watch(showAddTestModal, (newValue)=> {
+  if(newValue) document.body.style.overflowY = 'hidden'
+  else document.body.style.overflowY = 'auto'
+})
+const handleTextSizeChange = (size) => {
+  console.log('Text size changed to:', size)
+  // You can also store this in a global store
+}
 </script>
 <template>
   <div class="min-h-screen bg-gray-50 px-8 py-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold mb-8">Teacher Panel</h1>
-
+<UploadTest/>
       <!-- Students Results -->
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-4">Students Results</h2>
 
-        <div class="overflow-x-auto border rounded-lg bg-white">
+        <div class="overflow-x-auto border rounded-lg border-blue-500/70">
           <table class="min-w-full text-sm">
-            <thead class="bg-gray-100">
-            <tr>
-              <th class="p-3 text-left">Student</th>
+            <thead class="bg-blue-500/20 backdrop-blur-xl">
+            <tr class="text-blue-900">
+              <th class="p-3">Student</th>
               <th class="p-3">Listening</th>
               <th class="p-3">Reading</th>
               <th class="p-3">Writing</th>
@@ -144,12 +152,13 @@ const handleTestAdded = () => {
       <section>
         <div class="flex justify-between items-center mb-4">
           <h2 class="text-2xl font-semibold">Tests Management</h2>
-          <button
+          <CButton
               @click="showAddTestModal = true"
               class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500"
-          >
-            + Add Test
-          </button>
+              text="+ Add Test"
+              variant="primary"
+              size="medium"
+          />
         </div>
 
         <div class="grid md:grid-cols-3 gap-6">
@@ -189,6 +198,5 @@ const handleTestAdded = () => {
         @close="showAddTestModal = false"
         @test-added="handleTestAdded"
     />
-    <button @click="logout">Logout</button>
   </div>
 </template>

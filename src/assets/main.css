@@ -12,3 +12,47 @@
     max-width: 1250px;
     margin: auto;
 }
+
+
+/* Text size scaling classes */
+:root {
+    --text-scale: 1;
+}
+
+.text-size-small {
+    --text-scale: 0.875;
+}
+
+.text-size-medium {
+    --text-scale: 1;
+}
+
+.text-size-large {
+    --text-scale: 1.125;
+}
+
+/* Apply scaling to all text elements */
+.text-size-small body {
+    font-size: calc(1rem * var(--text-scale));
+}
+
+.text-size-medium body {
+    font-size: calc(1rem * var(--text-scale));
+}
+
+.text-size-large body {
+    font-size: calc(1rem * var(--text-scale));
+}
+
+/* Optional: Scale specific components more aggressively */
+.text-size-small .question-text,
+.text-size-small .reading-passage,
+.text-size-small .instruction-text {
+    font-size: calc(1rem * var(--text-scale) * 1.1);
+}
+
+.text-size-large .question-text,
+.text-size-large .reading-passage,
+.text-size-large .instruction-text {
+    font-size: calc(1rem * var(--text-scale) * 1.1);
+}
