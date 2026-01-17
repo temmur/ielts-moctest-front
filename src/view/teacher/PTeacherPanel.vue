@@ -8,6 +8,17 @@ import UploadTest from "@/components/UploadTest.vue";
 const loading = ref(true)
 const showAddTestModal = ref(false)
 
+// Inside <script setup>
+const editingTest = ref(null)      // Stores the test object to edit
+const editingTestType = ref('')    // 'listening' | 'reading' | 'writing'
+
+const editTest = (type: string, test: any) => {
+  editingTest.value = test        // store the test data
+  editingTestType.value = type    // store the test type
+  showAddTestModal.value = true   // open the modal
+}
+
+
 // Students and tests
 const students = ref<any[]>([])
 const listeningTests = ref<any[]>([])
@@ -81,11 +92,10 @@ const deleteTest = async (type: string, testId: string) => {
   loadTests()
 }
 
-onMounted(async () => {
-  await loadStudents()
-  await loadTests()
-  loading.value = false
-})
+
+
+
+
 
 // Reload after adding test
 const handleTestAdded = () => {
@@ -100,6 +110,14 @@ const handleTextSizeChange = (size) => {
   console.log('Text size changed to:', size)
   // You can also store this in a global store
 }
+
+const closeModal = () => {
+  emit('close')
+  editingTest.value = null
+  editingTestType.value = ''
+  // optionally reset form fields here
+}
+
 </script>
 <template>
   <div class="min-h-screen bg-gray-50 px-8 py-6">
@@ -165,7 +183,7 @@ const handleTextSizeChange = (size) => {
             <h3 class="font-medium">{{ test.title }}</h3>
             <p class="text-sm text-gray-500">Listening</p>
             <div class="flex gap-2 mt-2">
-              <button class="text-indigo-600 hover:underline">Edit</button>
+              <button @click="editTest('listening', test)" class="text-indigo-600 hover:underline">Edit</button>
               <button @click="deleteTest('listening', test.id)" class="text-red-600 hover:underline">Delete</button>
             </div>
           </div>
@@ -174,16 +192,17 @@ const handleTextSizeChange = (size) => {
             <h3 class="font-medium">{{ test.title }}</h3>
             <p class="text-sm text-gray-500">Reading</p>
             <div class="flex gap-2 mt-2">
-              <button class="text-indigo-600 hover:underline">Edit</button>
+              <button @click="editTest('reading', test)" class="text-indigo-600 hover:underline">Edit</button>
               <button @click="deleteTest('reading', test.id)" class="text-red-600 hover:underline">Delete</button>
             </div>
           </div>
+
 
           <div v-for="test in writingTests" :key="test.id" class="bg-white p-4 rounded shadow">
             <h3 class="font-medium">{{ test.title }}</h3>
             <p class="text-sm text-gray-500">Writing</p>
             <div class="flex gap-2 mt-2">
-              <button class="text-indigo-600 hover:underline">Edit</button>
+              <button @click="editTest('writing', test)" class="text-indigo-600 hover:underline">Edit</button>
               <button @click="deleteTest('writing', test.id)" class="text-red-600 hover:underline">Delete</button>
             </div>
           </div>
@@ -194,6 +213,8 @@ const handleTextSizeChange = (size) => {
     <!-- Add Test Modal -->
     <AddTestModal
         v-if="showAddTestModal"
+        :editing-test="editingTest"
+        :test-type="editingTestType"
         @close="showAddTestModal = false"
         @test-added="handleTestAdded"
     />

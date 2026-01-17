@@ -89,6 +89,7 @@ router.beforeEach(async (to) => {
             .eq('id', session.user.id)
             .single()
 
+
         if (error) {
             console.error('Failed to get user role:', error)
             return '/login'
