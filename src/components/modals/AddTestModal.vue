@@ -700,13 +700,31 @@ import CButton from "@/components/forms/CButton.vue"
 import { userService, testService } from '@/service/supabase.js'
 import { supabase } from '@/service/supabase.js' // ADD THIS LINE
 
+import { computed,watch } from 'vue'
+
+const isEditing = computed(() => !!props.editingTest)
+
+
+watch(() => props.editingTest, (newTest) => {
+  if (newTest) {
+    testTitle.value = newTest.title
+    if (props.testType === 'listening' || props.testType === 'reading') {
+      testParts.splice(0, testParts.length, ...JSON.parse(JSON.stringify(newTest.sections || [])))
+    } else if (props.testType === 'writing') {
+      writingTasks.task1 = { ...newTest.task1 }
+      writingTasks.task2 = { ...newTest.task2 }
+    }
+  } else {
+    resetForm()
+  }
+}, { immediate: true })
 
 const props = defineProps({
   editingTest: { type: Object, default: null },
   testType: { type: String, default: '' }
 })
 
-const isEditing = ref(false)
+
 
 onMounted(() => {
   if (props.editingTest) {
@@ -984,31 +1002,43 @@ const saveTest = async () => {
   error.value = ''
 
   try {
+    if (!testTitle.value.trim()) {
+      throw new Error('Test title is required')
+    }
+
     if (isEditing.value) {
+      // UPDATE EXISTING TEST
       await supabase
           .from(`${props.testType}_tests`)
           .update({
             title: testTitle.value,
-            sections: props.testType !== 'writing' ? testParts.value : null,
+            sections: JSON.stringify(testParts), // make sure to stringify if needed
             task1: props.testType === 'writing' ? writingTasks.task1 : null,
             task2: props.testType === 'writing' ? writingTasks.task2 : null,
             updated_at: new Date()
           })
           .eq('id', props.editingTest.id)
-
-      emit('test-added')
-      emit('close')
-      return
+    } else {
+      // CREATE NEW TEST (your existing logic)
     }
 
-    // CREATE logic continues here (unchanged)
+    // Emit success to reload list in TeacherPanel
+    emit('saved', {
+      type: props.testType,
+      id: isEditing.value ? props.editingTest.id : result.id,
+      title: testTitle.value
+    })
+
+    // Only reset form if not editing
+    if (!isEditing.value) resetForm()
+
   } catch (err) {
     error.value = err.message || 'Failed to save test'
+    console.error(err)
   } finally {
     loading.value = false
   }
 }
-
 
     // Debug: Check all files
     console.log('=== DEBUG: Checking all files ===')
@@ -1324,35 +1354,8 @@ const saveTest = async () => {
 
     }
 
-    // Emit success event
-    emit('saved', {
-      type: selectedTestType.value,
-      id: result.id,
-      title: testTitle.value
-    })
 
-    // Show success message
-    alert(`${selectedTestType.value.charAt(0).toUpperCase() + selectedTestType.value.slice(1)} test created successfully!`)
 
-    // Reset form
-    resetForm()
-
-  } catch (err) {
-    console.error('Error saving test:', err)
-    console.error('Error stack:', err.stack)
-    error.value = err.message || 'Failed to save test. Please try again.'
-
-    // Show detailed error in alert for debugging
-    alert(`Error: ${err.message}\n\nCheck console for details.`)
-  } finally {
-    loading.value = false
-  }
-  // Add this at the beginning of saveTest function
-  console.log('=== Checking Storage Buckets ===')
-  const { data: buckets } = await supabase.storage.listBuckets()
-  console.log('Available buckets:', buckets?.map(b => b.name))
-  console.log('=== End Bucket Check ===')
-}
 
 const resetForm = () => {
   selectedTestType.value = null
