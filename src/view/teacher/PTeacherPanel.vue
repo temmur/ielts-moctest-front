@@ -105,7 +105,6 @@ const handleTextSizeChange = (size) => {
   <div class="min-h-screen bg-gray-50 px-8 py-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold mb-8">Teacher Panel</h1>
-<UploadTest/>
       <!-- Students Results -->
       <section class="mb-12">
         <h2 class="text-2xl font-semibold mb-4">Students Results</h2>

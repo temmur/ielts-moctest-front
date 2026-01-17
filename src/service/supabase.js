@@ -201,30 +201,62 @@ export const testService = {
         }
     },
 
+    // async createListeningQuestion(questionData, sectionId, questionNumber) {
+    //     try {
+    //         const { data, error } = await supabase
+    //             .from('listening_questions')
+    //             .insert([{
+    //                 section_id: sectionId,
+    //                 question_text: questionData.text,
+    //                 question_number: questionNumber,
+    //                 question_type: questionData.type,
+    //                 correct_answer: questionData.answer,
+    //                 options: questionData.options?.length > 0 ? questionData.options : null,
+    //                 correct_option: questionData.correctOption || null,
+    //                 matching_items: questionData.matchingItems?.length > 0 ? questionData.matchingItems : null,
+    //                 matching_options: questionData.matchingOptions?.length > 0 ? questionData.matchingOptions : null
+    //             }])
+    //             .select()
+    //             .single()
+    //
+    //         if (error) throw error
+    //         return data
+    //     } catch (error) {
+    //         console.error('Error creating listening question:', error)
+    //         throw error
+    //     }
+    // },
     async createListeningQuestion(questionData, sectionId, questionNumber) {
-        try {
-            const { data, error } = await supabase
-                .from('listening_questions')
-                .insert([{
-                    section_id: sectionId,
-                    question_text: questionData.text,
-                    question_number: questionNumber,
-                    question_type: questionData.type,
-                    correct_answer: questionData.answer,
-                    options: questionData.options?.length > 0 ? questionData.options : null,
-                    correct_option: questionData.correctOption || null,
-                    matching_items: questionData.matchingItems?.length > 0 ? questionData.matchingItems : null,
-                    matching_options: questionData.matchingOptions?.length > 0 ? questionData.matchingOptions : null
-                }])
-                .select()
-                .single()
+        const { data, error } = await supabase
+            .from('listening_questions')
+            .insert([{
+                section_id: sectionId,
+                question_text: questionData.text, // ✅ теперь есть
+                order_number: questionNumber,
+                question_type: questionData.type || 'note_completion'
+            }])
+            .select()
+            .single()
 
-            if (error) throw error
-            return data
-        } catch (error) {
-            console.error('Error creating listening question:', error)
-            throw error
-        }
+        if (error) throw error
+        return data
+    },
+
+
+    async createListeningAnswers(questionId, answers) {
+        if (!Array.isArray(answers) || answers.length === 0) return
+
+        const payload = answers.map((answer, index) => ({
+            question_id: questionId,
+            blank_number: index + 1,
+            correct_answer: answer
+        }))
+
+        const { error } = await supabase
+            .from('listening_answers')
+            .insert(payload)
+
+        if (error) throw error
     },
 
     // Reading Tests
@@ -259,54 +291,104 @@ export const testService = {
         }
     },
 
-    async createReadingSection(sectionData, testId, partNumber, sectionNumber) {
-        try {
-            const { data, error } = await supabase
-                .from('reading_sections')
-                .insert([{
-                    test_id: testId,
-                    title: sectionData.title,
-                    content: sectionData.content,
-                    part_number: partNumber,
-                    section_number: sectionNumber,
-                    order_number: sectionNumber,
-                    question_type: sectionData.questionType,
-                    question_count: sectionData.questions?.length || 0,
-                    image_url: sectionData.imageUrl || null
-                }])
-                .select()
-                .single()
+    // async createReadingSection(sectionData, testId, partNumber, sectionNumber) {
+    //     try {
+    //         const { data, error } = await supabase
+    //             .from('reading_sections')
+    //             .insert([{
+    //                 test_id: testId,
+    //                 title: sectionData.title,
+    //                 content: sectionData.content,
+    //                 part_number: partNumber,
+    //                 section_number: sectionNumber,
+    //                 order_number: sectionNumber,
+    //                 question_type: sectionData.questionType,
+    //                 question_count: sectionData.questions?.length || 0,
+    //                 image_url: sectionData.imageUrl || null
+    //             }])
+    //             .select()
+    //             .single()
+    //
+    //         if (error) throw error
+    //         return data
+    //     } catch (error) {
+    //         console.error('Error creating reading section:', error)
+    //         throw error
+    //     }
+    // },
+    async createReadingSection(sectionData, testId, sectionNumber) {
+        const { data, error } = await supabase
+            .from('reading_sections')
+            .insert([{
+                test_id: testId,
+                section_number: sectionNumber,
+                passage_title: sectionData.title,
+                passage_text: sectionData.content,
+                question_type: sectionData.questionType
+            }])
+            .select()
+            .single()
 
-            if (error) throw error
-            return data
-        } catch (error) {
-            console.error('Error creating reading section:', error)
-            throw error
-        }
+        if (error) throw error
+        return data
     },
 
-    async createReadingQuestion(questionData, sectionId, questionNumber) {
-        try {
-            const { data, error } = await supabase
-                .from('reading_questions')
-                .insert([{
-                    section_id: sectionId,
-                    question_text: questionData.text,
-                    question_number: questionNumber,
-                    question_type: questionData.type,
-                    correct_answer: questionData.answer,
-                    options: questionData.options?.length > 0 ? questionData.options : null,
-                    correct_option: questionData.correctOption || null,
-                    matching_items: questionData.matchingItems?.length > 0 ? questionData.matchingItems : null,
-                    matching_options: questionData.matchingOptions?.length > 0 ? questionData.matchingOptions : null
-                }])
-                .select()
-                .single()
+    // async createReadingQuestion(questionData, sectionId, questionNumber) {
+    //     try {
+    //         const { data, error } = await supabase
+    //             .from('reading_questions')
+    //             .insert([{
+    //                 section_id: sectionId,
+    //                 question_text: questionData.text,
+    //                 question_number: questionNumber,
+    //                 question_type: questionData.type,
+    //                 correct_answer: questionData.answer,
+    //                 options: questionData.options?.length > 0 ? questionData.options : null,
+    //                 correct_option: questionData.correctOption || null,
+    //                 matching_items: questionData.matchingItems?.length > 0 ? questionData.matchingItems : null,
+    //                 matching_options: questionData.matchingOptions?.length > 0 ? questionData.matchingOptions : null
+    //             }])
+    //             .select()
+    //             .single()
+    //
+    //         if (error) throw error
+    //         return data
+    //     } catch (error) {
+    //         console.error('Error creating reading question:', error)
+    //         throw error
+    //     }
+    // },
 
-            if (error) throw error
-            return data
-        } catch (error) {
-            console.error('Error creating reading question:', error)
+    async createReadingQuestion(questionData, sectionId, questionNumber) {
+        const { data, error } = await supabase
+            .from('reading_questions')
+            .insert([{
+                section_id: sectionId,
+                order_number: questionNumber,
+                question_text: questionData.text,
+                question_type: questionData.type || 'note_completion'
+            }])
+            .select()
+            .single()
+
+        if (error) throw error
+        return data
+    },
+    async createReadingAnswers(questionId, answers) {
+        if (!Array.isArray(answers) || answers.length === 0) return
+
+        const payload = answers.map((answer, index) => ({
+            question_id: questionId,
+            blank_number: index + 1,
+            correct_answer: answer
+        }))
+
+        const { error } = await supabase
+            .from('reading_answers')
+            .insert(payload)
+
+        if (error) {
+            console.error('Error creating reading answers:', error)
             throw error
         }
     },
@@ -354,53 +436,79 @@ export const testService = {
     // File upload functions
     // Update the uploadFile function in supabase.js
 
+    // async uploadFile(file, bucket, path) {
+    //     try {
+    //         // First, ensure bucket exists
+    //         await this.createBucketIfNotExists(bucket)
+    //
+    //         const fileExt = file.name.split('.').pop().toLowerCase()
+    //         const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`
+    //         const filePath = path ? `${path}/${fileName}` : fileName
+    //
+    //         console.log(`Uploading to ${bucket}: ${filePath}`)
+    //         console.log(`File: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`)
+    //
+    //         // Validate file size (50MB limit)
+    //         if (file.size > 52428800) {
+    //             throw new Error('File size exceeds 50MB limit')
+    //         }
+    //
+    //         const { data, error } = await supabase.storage
+    //             .from(bucket)
+    //             .upload(filePath, file, {
+    //                 cacheControl: '3600',
+    //                 upsert: false,
+    //                 contentType: file.type || this.getContentType(fileExt)
+    //             })
+    //
+    //         if (error) {
+    //             console.error('Storage upload error:', error)
+    //             throw error
+    //         }
+    //
+    //         console.log('Upload successful:', data)
+    //
+    //         // Get public URL
+    //         const { data: urlData } = supabase.storage
+    //             .from(bucket)
+    //             .getPublicUrl(filePath)
+    //
+    //         const publicUrl = urlData.publicUrl
+    //         console.log('Public URL:', publicUrl)
+    //
+    //         return publicUrl
+    //
+    //     } catch (error) {
+    //         console.error('Error in uploadFile:', error)
+    //         throw new Error(`File upload failed: ${error.message}`)
+    //     }
+    // },
     async uploadFile(file, bucket, path) {
-        try {
-            // First, ensure bucket exists
-            await this.createBucketIfNotExists(bucket)
+        const fileExt = file.name.split('.').pop().toLowerCase()
+        const fileName = `${Date.now()}_${crypto.randomUUID()}.${fileExt}`
+        const filePath = path ? `${path}/${fileName}` : fileName
 
-            const fileExt = file.name.split('.').pop().toLowerCase()
-            const fileName = `${Date.now()}_${Math.random().toString(36).substring(2, 15)}.${fileExt}`
-            const filePath = path ? `${path}/${fileName}` : fileName
-
-            console.log(`Uploading to ${bucket}: ${filePath}`)
-            console.log(`File: ${file.name}, Type: ${file.type}, Size: ${file.size} bytes`)
-
-            // Validate file size (50MB limit)
-            if (file.size > 52428800) {
-                throw new Error('File size exceeds 50MB limit')
-            }
-
-            const { data, error } = await supabase.storage
-                .from(bucket)
-                .upload(filePath, file, {
-                    cacheControl: '3600',
-                    upsert: false,
-                    contentType: file.type || this.getContentType(fileExt)
-                })
-
-            if (error) {
-                console.error('Storage upload error:', error)
-                throw error
-            }
-
-            console.log('Upload successful:', data)
-
-            // Get public URL
-            const { data: urlData } = supabase.storage
-                .from(bucket)
-                .getPublicUrl(filePath)
-
-            const publicUrl = urlData.publicUrl
-            console.log('Public URL:', publicUrl)
-
-            return publicUrl
-
-        } catch (error) {
-            console.error('Error in uploadFile:', error)
-            throw new Error(`File upload failed: ${error.message}`)
+        if (file.size > 52428800) {
+            throw new Error('File size exceeds 50MB limit')
         }
+
+        const { error } = await supabase.storage
+            .from(bucket)
+            .upload(filePath, file, {
+                cacheControl: '3600',
+                upsert: false,
+                contentType: file.type
+            })
+
+        if (error) throw error
+
+        const { data } = supabase.storage
+            .from(bucket)
+            .getPublicUrl(filePath)
+
+        return data.publicUrl
     },
+
 
     async createBucketIfNotExists(bucketName) {
         try {

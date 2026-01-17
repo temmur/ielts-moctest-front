@@ -233,20 +233,46 @@
                               v-model="question.text"
                               type="text"
                               class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              :placeholder="getQuestionPlaceholder(section.questionType, qIndex)"
+                              placeholder="Use {{1}}, {{2}} for blanks"
                           />
                         </div>
 
                         <!-- Answer Input (for note completion) -->
                         <div v-if="section.questionType === 'note_completion'" class="mb-3">
-                          <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
-                          <input
-                              v-model="question.answer"
-                              type="text"
-                              class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              placeholder="Enter correct answer"
-                          />
+                          <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Correct Answers (for {{1}}, {{2}} ...)
+                          </label>
+
+                          <div
+                              v-for="(answer, index) in question.answers"
+                              :key="index"
+                              class="flex gap-2 mb-2"
+                          >
+                            <input
+                                v-model="question.answers[index]"
+                                type="text"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :placeholder="`Answer for blank {{${index + 1}}}`"
+                            />
+
+                            <button
+                                type="button"
+                                class="px-3 py-2 bg-red-500 text-white rounded-md"
+                                @click="question.answers.splice(index, 1)"
+                            >
+                              ✕
+                            </button>
+                          </div>
+
+                          <button
+                              type="button"
+                              class="mt-2 px-4 py-2 bg-blue-600 text-white rounded-md"
+                              @click="addBlank(question)"
+                          >
+                            + Add blank
+                          </button>
                         </div>
+
 
                         <!-- Multiple Choice Options -->
                         <div v-if="section.questionType === 'multiple_choice'" class="space-y-2">
@@ -706,30 +732,7 @@ const questionTypes = [
 ]
 
 // Test parts structure for Listening/Reading
-const testParts = reactive([
-  {
-    description: '',
-    sections: [
-      {
-        title: '',
-        content: '',
-        imageFile: null,
-        imagePreview: null,
-        questionType: 'note_completion',
-        questions: [
-          {
-            text: '',
-            answer: '',
-            options: [],
-            correctOption: null,
-            matchingItems: [],
-            matchingOptions: []
-          }
-        ]
-      }
-    ]
-  }
-])
+
 
 // Writing tasks structure
 const writingTasks = reactive({
@@ -779,52 +782,39 @@ const nextStep = () => {
 }
 
 const addPart = () => {
-  testParts.push({
-    description: '',
-    sections: [
-      {
-        title: '',
-        content: '',
-        imageFile: null,
-        imagePreview: null,
-        questionType: 'note_completion',
-        questions: [
-          {
-            text: '',
-            answer: '',
-            options: [],
-            correctOption: null,
-            matchingItems: [],
-            matchingOptions: []
-          }
-        ]
-      }
-    ]
-  })
+  testParts.push(createEmptyPart())
 }
 
 const removePart = (index) => {
   testParts.splice(index, 1)
 }
+const createEmptyQuestion = () => ({
+  text: '',
+  answers: [],           // ✅ ВСЕГДА СУЩЕСТВУЕТ
+  options: [],
+  correctOption: null,
+  matchingItems: [],
+  matchingOptions: []
+})
+
+const createEmptySection = () => ({
+  title: '',
+  content: '',
+  imageFile: null,
+  imagePreview: null,
+  questionType: 'note_completion',
+  questions: [createEmptyQuestion()]
+})
+
+const createEmptyPart = () => ({
+  description: '',
+  sections: [createEmptySection()]
+})
+
+const testParts = reactive([createEmptyPart()])
 
 const addSection = (partIndex) => {
-  testParts[partIndex].sections.push({
-    title: '',
-    content: '',
-    imageFile: null,
-    imagePreview: null,
-    questionType: 'note_completion',
-    questions: [
-      {
-        text: '',
-        answer: '',
-        options: [],
-        correctOption: null,
-        matchingItems: [],
-        matchingOptions: []
-      }
-    ]
-  })
+  testParts[partIndex].sections.push(createEmptySection())
 }
 
 const removeSection = (partIndex, sectionIndex) => {
@@ -855,15 +845,21 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imagePreview = null
 }
 
+// const addQuestion = (partIndex, sectionIndex) => {
+//   testParts[partIndex].sections[sectionIndex].questions.push({
+//     text: '',
+//     answer: '',
+//     options: [],
+//     correctOption: null,
+//     matchingItems: [],
+//     matchingOptions: []
+//   })
+// }
+// In your component script, update the question structure
 const addQuestion = (partIndex, sectionIndex) => {
-  testParts[partIndex].sections[sectionIndex].questions.push({
-    text: '',
-    answer: '',
-    options: [],
-    correctOption: null,
-    matchingItems: [],
-    matchingOptions: []
-  })
+  testParts[partIndex].sections[sectionIndex].questions.push(
+      createEmptyQuestion()
+  )
 }
 
 const removeQuestion = (partIndex, sectionIndex, questionIndex) => {
@@ -1132,45 +1128,54 @@ const saveTest = async () => {
                 }))
               }
             }
-
             const questionData = {
-              text: question.text,
-              answer: question.answer || '',
+              text: question.text, // ✅ ВАЖНО
               type: section.questionType,
-              options: options,
-              correctOption: question.correctOption,
-              matchingItems: matchingItems,
-              matchingOptions: matchingOptions
+              order_number: qIndex + 1
             }
 
-            await testService.createListeningQuestion(
+            const createdQuestion = await testService.createListeningQuestion(
                 questionData,
                 sectionResult.id,
                 qIndex + 1
             )
+
+            // 2️⃣ сохраняем answers ТОЛЬКО для note_completion
+            if (section.questionType === 'note_completion') {
+              await testService.createListeningAnswers(
+                  createdQuestion.id,
+                  question.answers
+              )
+            }
+
+            // await testService.createListeningQuestion(
+            //     questionData,
+            //     sectionResult.id,
+            //     qIndex + 1
+            // )
           }
         }
       }
 
-    } else if (selectedTestType.value === 'reading') {
+    }
+    else if (selectedTestType.value === 'reading') {
       console.log('=== Creating Reading Test ===')
 
-      // Create reading test
+      // 1️⃣ Create reading test
       const testResult = await testService.createReadingTest(testData, userId)
       console.log('Reading test created with ID:', testResult.id)
       result = testResult
 
-      // Create sections and questions
+      // 2️⃣ Create sections
       for (let partIndex = 0; partIndex < testParts.length; partIndex++) {
         const part = testParts[partIndex]
 
         for (let sectionIndex = 0; sectionIndex < part.sections.length; sectionIndex++) {
           const section = part.sections[sectionIndex]
 
-          // Upload section image if exists
+          // Upload image if exists (опционально)
           let imageUrl = null
           if (section.imageFile) {
-            console.log(`Uploading image for Part ${partIndex + 1}, Section ${sectionIndex + 1}...`)
             try {
               imageUrl = await testService.uploadSectionImage(
                   section.imageFile,
@@ -1178,81 +1183,154 @@ const saveTest = async () => {
                   partIndex + 1,
                   sectionIndex + 1
               )
-              console.log('Section image uploaded. URL:', imageUrl)
-            } catch (uploadError) {
-              console.error('Section image upload failed:', uploadError)
-              // Continue without image
+            } catch (e) {
+              console.error('Image upload failed', e)
             }
           }
 
-          // Create section
-          const sectionData = {
-            title: section.title,
-            content: section.content,
-            questionType: section.questionType,
-            imageUrl: imageUrl,
-            questions: section.questions
-          }
-
+          // 3️⃣ Create section
           const sectionResult = await testService.createReadingSection(
-              sectionData,
+              {
+                title: section.title,
+                content: section.content,
+                questionType: section.questionType
+              },
               testResult.id,
-              partIndex + 1,
               sectionIndex + 1
           )
-          console.log('Section created with ID:', sectionResult.id)
 
-          // Create questions
+          console.log('Section created:', sectionResult.id)
+
+          // 4️⃣ Create questions
           for (let qIndex = 0; qIndex < section.questions.length; qIndex++) {
             const question = section.questions[qIndex]
 
-            // Prepare options for multiple choice
-            let options = null
-            if (section.questionType === 'multiple_choice' && question.options?.length > 0) {
-              options = question.options.map(option => ({
-                id: option.id,
-                text: option.text
-              }))
-            }
-
-            // Prepare matching items and options
-            let matchingItems = null
-            let matchingOptions = null
-            if (section.questionType === 'matching') {
-              if (question.matchingItems?.length > 0) {
-                matchingItems = question.matchingItems.map(item => ({
-                  name: item.name,
-                  matchedOption: item.matchedOption
-                }))
-              }
-              if (question.matchingOptions?.length > 0) {
-                matchingOptions = question.matchingOptions.map(option => ({
-                  text: option.text,
-                  selected: option.selected
-                }))
-              }
-            }
-
+            // ⬅️ ВАЖНО: только данные вопроса
             const questionData = {
               text: question.text,
-              answer: question.answer || '',
-              type: section.questionType,
-              options: options,
-              correctOption: question.correctOption,
-              matchingItems: matchingItems,
-              matchingOptions: matchingOptions
+              type: section.questionType
             }
 
-            await testService.createReadingQuestion(
+            const createdQuestion = await testService.createReadingQuestion(
                 questionData,
                 sectionResult.id,
                 qIndex + 1
             )
+
+            // 5️⃣ Save answers ONLY for note_completion
+            if (section.questionType === 'note_completion') {
+              await testService.createReadingAnswers(
+                  createdQuestion.id,
+                  question.answers
+              )
+            }
           }
         }
       }
+    }
 
-    } else if (selectedTestType.value === 'writing') {
+        // else if (selectedTestType.value === 'reading') {
+    //   console.log('=== Creating Reading Test ===')
+    //
+    //   // Create reading test
+    //   const testResult = await testService.createReadingTest(testData, userId)
+    //   console.log('Reading test created with ID:', testResult.id)
+    //   result = testResult
+    //
+    //   // Create sections and questions
+    //   for (let partIndex = 0; partIndex < testParts.length; partIndex++) {
+    //     const part = testParts[partIndex]
+    //
+    //     for (let sectionIndex = 0; sectionIndex < part.sections.length; sectionIndex++) {
+    //       const section = part.sections[sectionIndex]
+    //
+    //       // Upload section image if exists
+    //       let imageUrl = null
+    //       if (section.imageFile) {
+    //         console.log(`Uploading image for Part ${partIndex + 1}, Section ${sectionIndex + 1}...`)
+    //         try {
+    //           imageUrl = await testService.uploadSectionImage(
+    //               section.imageFile,
+    //               testResult.id,
+    //               partIndex + 1,
+    //               sectionIndex + 1
+    //           )
+    //           console.log('Section image uploaded. URL:', imageUrl)
+    //         } catch (uploadError) {
+    //           console.error('Section image upload failed:', uploadError)
+    //           // Continue without image
+    //         }
+    //       }
+    //
+    //       // Create section
+    //       const sectionData = {
+    //         title: section.title,
+    //         content: section.content,
+    //         questionType: section.questionType,
+    //         imageUrl: imageUrl,
+    //         questions: section.questions
+    //       }
+    //
+    //       const sectionResult = await testService.createReadingSection(
+    //           sectionData,
+    //           testResult.id,
+    //           partIndex + 1,
+    //           sectionIndex + 1
+    //       )
+    //       console.log('Section created with ID:', sectionResult.id)
+    //
+    //       // Create questions
+    //       for (let qIndex = 0; qIndex < section.questions.length; qIndex++) {
+    //         const question = section.questions[qIndex]
+    //
+    //         // Prepare options for multiple choice
+    //         let options = null
+    //         if (section.questionType === 'multiple_choice' && question.options?.length > 0) {
+    //           options = question.options.map(option => ({
+    //             id: option.id,
+    //             text: option.text
+    //           }))
+    //         }
+    //
+    //         // Prepare matching items and options
+    //         let matchingItems = null
+    //         let matchingOptions = null
+    //         if (section.questionType === 'matching') {
+    //           if (question.matchingItems?.length > 0) {
+    //             matchingItems = question.matchingItems.map(item => ({
+    //               name: item.name,
+    //               matchedOption: item.matchedOption
+    //             }))
+    //           }
+    //           if (question.matchingOptions?.length > 0) {
+    //             matchingOptions = question.matchingOptions.map(option => ({
+    //               text: option.text,
+    //               selected: option.selected
+    //             }))
+    //           }
+    //         }
+    //
+    //         const questionData = {
+    //           text: question.text,
+    //           answer: question.answer || '',
+    //           type: section.questionType,
+    //           options: options,
+    //           correctOption: question.correctOption,
+    //           matchingItems: matchingItems,
+    //           matchingOptions: matchingOptions
+    //         }
+    //
+    //         await testService.createReadingQuestion(
+    //             questionData,
+    //             sectionResult.id,
+    //             qIndex + 1
+    //         )
+    //       }
+    //     }
+    //   }
+    //
+    // }
+    else if (selectedTestType.value === 'writing') {
       console.log('=== Creating Writing Test ===')
 
       // Create writing test first (without image URLs initially)
@@ -1386,7 +1464,7 @@ const resetForm = () => {
         questionType: 'note_completion',
         questions: [{
           text: '',
-          answer: '',
+          answer: [],
           options: [],
           correctOption: null,
           matchingItems: [],
@@ -1426,6 +1504,12 @@ const resetForm = () => {
   }
 
   step.value = 1
+}
+const addBlank = (question) => {
+  if (!Array.isArray(question.answers)) {
+    question.answers = []
+  }
+  question.answers.push('')
 }
 </script>
 
