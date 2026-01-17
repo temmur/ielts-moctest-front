@@ -33,7 +33,7 @@ const login = async () => {
     return
   }
 
-  router.push('/')
+  router.push('/test/listening')
 }
 
 </script>

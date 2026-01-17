@@ -63,7 +63,7 @@ const finishWriting = () => {
 
   alert('Writing finished! Your answers are saved.')
   // Redirect to results page or next step
-  router.push('/test/login')
+  router.push('/test/final')
 }
 
 onMounted(startTimer)

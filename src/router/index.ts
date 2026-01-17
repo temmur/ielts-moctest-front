@@ -37,13 +37,13 @@ const routes: Array<RouteRecordRaw> = [
                 meta: { requiresAuth: true }
             },
             {
-                path: '/test/reading/:studentTestId',
+                path: '/test/reading/',
                 name: "Reading",
                 component: PReading,
                 meta: { requiresAuth: true }
             },
             {
-                path: '/test/writing/:studentTestId',
+                path: '/test/writing/',
                 name: "Writing",
                 component: PWriting,
                 meta: { requiresAuth: true }
