@@ -702,7 +702,8 @@ import { supabase } from '@/service/supabase.js' // ADD THIS LINE
 
 import { computed,watch } from 'vue'
 
-const isEditing = computed(() => !!props.editingTest)
+const isEditing = ref(false)
+
 
 
 watch(() => props.editingTest, (newTest) => {
@@ -715,7 +716,10 @@ watch(() => props.editingTest, (newTest) => {
       writingTasks.task2 = { ...newTest.task2 }
     }
   } else {
-    resetForm()
+    if (!isEditing.value) {
+      resetForm()
+    }
+
   }
 }, { immediate: true })
 
@@ -728,7 +732,6 @@ const props = defineProps({
 
 onMounted(() => {
   if (props.editingTest) {
-    isEditing.value = true  // set this flag
     testTitle.value = props.editingTest.title
     if (props.testType === 'listening' || props.testType === 'reading') {
       testParts.splice(0, testParts.length, ...JSON.parse(JSON.stringify(props.editingTest.sections || [])))
@@ -996,6 +999,18 @@ const closeModal = () => {
   resetForm()
   emit('test-added')
 }
+const updateTest = async () => {
+  await supabase
+      .from(`${props.testType}_tests`)
+      .update({
+        title: testTitle.value,
+        sections: JSON.stringify(testParts),
+        task1: props.testType === 'writing' ? writingTasks.task1 : null,
+        task2: props.testType === 'writing' ? writingTasks.task2 : null,
+        updated_at: new Date()
+      })
+      .eq('id', props.editingTest.id)
+}
 
 const saveTest = async () => {
   loading.value = true
@@ -1007,38 +1022,22 @@ const saveTest = async () => {
     }
 
     if (isEditing.value) {
-      // UPDATE EXISTING TEST
-      await supabase
-          .from(`${props.testType}_tests`)
-          .update({
-            title: testTitle.value,
-            sections: JSON.stringify(testParts), // make sure to stringify if needed
-            task1: props.testType === 'writing' ? writingTasks.task1 : null,
-            task2: props.testType === 'writing' ? writingTasks.task2 : null,
-            updated_at: new Date()
-          })
-          .eq('id', props.editingTest.id)
+      await updateTest()
     } else {
-      // CREATE NEW TEST (your existing logic)
+      await createTest()
     }
 
-    // Emit success to reload list in TeacherPanel
-    emit('saved', {
-      type: props.testType,
-      id: isEditing.value ? props.editingTest.id : result.id,
-      title: testTitle.value
-    })
-
-    // Only reset form if not editing
-    if (!isEditing.value) resetForm()
+    emit('saved')
+    resetForm()
 
   } catch (err) {
-    error.value = err.message || 'Failed to save test'
+    error.value = err.message
     console.error(err)
   } finally {
     loading.value = false
   }
 }
+
 
     // Debug: Check all files
     console.log('=== DEBUG: Checking all files ===')
@@ -1356,9 +1355,12 @@ const saveTest = async () => {
 
 
 
-
 const resetForm = () => {
-  selectedTestType.value = null
+  // Only clear type when NOT editing
+  if (!isEditing.value) {
+    selectedTestType.value = null
+  }
+
   testTitle.value = ''
   testDuration.value = 60
   writingDescription.value = ''
@@ -1367,7 +1369,7 @@ const resetForm = () => {
   loading.value = false
   error.value = ''
 
-  // Clean up all image previews in test parts
+  // do NOT clear testParts when editing:
   testParts.forEach(part => {
     part.sections.forEach(section => {
       if (section.imagePreview) {
@@ -1388,7 +1390,7 @@ const resetForm = () => {
         questionType: 'note_completion',
         questions: [{
           text: '',
-          answer: [],
+          answers: [],
           options: [],
           correctOption: null,
           matchingItems: [],
@@ -1398,12 +1400,8 @@ const resetForm = () => {
     ]
   })
 
-  // Reset writing tasks
-  if (writingTasks.task1.imagePreview) {
-    URL.revokeObjectURL(writingTasks.task1.imagePreview)
-  }
-  if (writingTasks.task2.imagePreview) {
-    URL.revokeObjectURL(writingTasks.task2.imagePreview)
+  if (!isEditing.value) {
+    testParts.splice(0, testParts.length, createEmptyPart())
   }
 
   writingTasks.task1 = {
@@ -1415,7 +1413,6 @@ const resetForm = () => {
     recommendedTime: 20,
     description: ''
   }
-
   writingTasks.task2 = {
     title: '',
     question: '',
@@ -1429,6 +1426,50 @@ const resetForm = () => {
 
   step.value = 1
 }
+
+// const resetForm = () => {
+//   selectedTestType.value = null
+//   testTitle.value = ''
+//   testDuration.value = 60
+//   writingDescription.value = ''
+//   audioFileName.value = ''
+//   audioFile.value = null
+//   loading.value = false
+//   error.value = ''
+//
+//   // Clean up all image previews in test parts
+//
+//   // Reset writing tasks
+//   if (writingTasks.task1.imagePreview) {
+//     URL.revokeObjectURL(writingTasks.task1.imagePreview)
+//   }
+//   if (writingTasks.task2.imagePreview) {
+//     URL.revokeObjectURL(writingTasks.task2.imagePreview)
+//   }
+//
+//   writingTasks.task1 = {
+//     title: '',
+//     question: '',
+//     imageFile: null,
+//     imagePreview: null,
+//     minWords: 150,
+//     recommendedTime: 20,
+//     description: ''
+//   }
+//
+//   writingTasks.task2 = {
+//     title: '',
+//     question: '',
+//     imageFile: null,
+//     imagePreview: null,
+//     minWords: 250,
+//     recommendedTime: 40,
+//     essayType: 'opinion',
+//     description: ''
+//   }
+//
+//   step.value = 1
+// }
 const addBlank = (question) => {
   if (!Array.isArray(question.answers)) {
     question.answers = []
