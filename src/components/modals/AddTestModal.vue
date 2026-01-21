@@ -1,3 +1,4 @@
+AddTestModal.vue:
 <template>
   <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-10 mx-auto p-5 border w-4/5 max-w-6xl shadow-lg rounded-md bg-white h-[90vh] overflow-y-scroll">
@@ -699,54 +700,8 @@ import { ref, reactive, onMounted } from 'vue'
 import CButton from "@/components/forms/CButton.vue"
 import { userService, testService } from '@/service/supabase.js'
 import { supabase } from '@/service/supabase.js' // ADD THIS LINE
-
-import { computed,watch } from 'vue'
-
-const isEditing = ref(false)
-
-
-
-watch(() => props.editingTest, (newTest) => {
-  if (newTest) {
-    testTitle.value = newTest.title
-    if (props.testType === 'listening' || props.testType === 'reading') {
-      testParts.splice(0, testParts.length, ...JSON.parse(JSON.stringify(newTest.sections || [])))
-    } else if (props.testType === 'writing') {
-      writingTasks.task1 = { ...newTest.task1 }
-      writingTasks.task2 = { ...newTest.task2 }
-    }
-  } else {
-    if (!isEditing.value) {
-      resetForm()
-    }
-
-  }
-}, { immediate: true })
-
-const props = defineProps({
-  editingTest: { type: Object, default: null },
-  testType: { type: String, default: '' }
-})
-
-
-
-onMounted(() => {
-  if (props.editingTest) {
-    testTitle.value = props.editingTest.title
-    if (props.testType === 'listening' || props.testType === 'reading') {
-      testParts.splice(0, testParts.length, ...JSON.parse(JSON.stringify(props.editingTest.sections || [])))
-    }
-    if (props.testType === 'writing') {
-      writingTasks.task1 = props.editingTest.task1 || { title: '', question: '', imageFile: null, imagePreview: null, minWords: 150, recommendedTime: 20, description: '' }
-      writingTasks.task2 = props.editingTest.task2 || { title: '', question: '', imageFile: null, imagePreview: null, minWords: 250, recommendedTime: 40, essayType: 'opinion', description: '' }
-    }
-  }
-})
-
-
-
 // Emits
-const emit = defineEmits(['close', 'test-added'])
+const emit = defineEmits(['close', 'saved'])
 
 // State
 const step = ref(1)
@@ -891,6 +846,17 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imagePreview = null
 }
 
+// const addQuestion = (partIndex, sectionIndex) => {
+//   testParts[partIndex].sections[sectionIndex].questions.push({
+//     text: '',
+//     answer: '',
+//     options: [],
+//     correctOption: null,
+//     matchingItems: [],
+//     matchingOptions: []
+//   })
+// }
+// In your component script, update the question structure
 const addQuestion = (partIndex, sectionIndex) => {
   testParts[partIndex].sections[sectionIndex].questions.push(
       createEmptyQuestion()
@@ -996,48 +962,27 @@ const getQuestionPlaceholder = (type, index) => {
 }
 
 const closeModal = () => {
+  emit('close')
   resetForm()
-  emit('test-added')
 }
-const updateTest = async () => {
-  await supabase
-      .from(`${props.testType}_tests`)
-      .update({
-        title: testTitle.value,
-        sections: JSON.stringify(testParts),
-        task1: props.testType === 'writing' ? writingTasks.task1 : null,
-        task2: props.testType === 'writing' ? writingTasks.task2 : null,
-        updated_at: new Date()
-      })
-      .eq('id', props.editingTest.id)
-}
-
 const saveTest = async () => {
-  loading.value = true
-  error.value = ''
-
   try {
+    loading.value = true
+    error.value = ''
+
+    // Validate user
+    if (!currentUser.value) {
+      throw new Error('You must be logged in to create tests')
+    }
+
+    if (currentUser.value.profile?.role !== 'teacher') {
+      throw new Error('Only teachers can create tests')
+    }
+
+    // Validate required fields
     if (!testTitle.value.trim()) {
       throw new Error('Test title is required')
     }
-
-    if (isEditing.value) {
-      await updateTest()
-    } else {
-      await createTest()
-    }
-
-    emit('saved')
-    resetForm()
-
-  } catch (err) {
-    error.value = err.message
-    console.error(err)
-  } finally {
-    loading.value = false
-  }
-}
-
 
     // Debug: Check all files
     console.log('=== DEBUG: Checking all files ===')
@@ -1203,7 +1148,12 @@ const saveTest = async () => {
                   question.answers
               )
             }
-            
+
+            // await testService.createListeningQuestion(
+            //     questionData,
+            //     sectionResult.id,
+            //     qIndex + 1
+            // )
           }
         }
       }
@@ -1280,6 +1230,7 @@ const saveTest = async () => {
       }
     }
 
+
     else if (selectedTestType.value === 'writing') {
       console.log('=== Creating Writing Test ===')
 
@@ -1353,14 +1304,38 @@ const saveTest = async () => {
 
     }
 
+    // Emit success event
+    emit('saved', {
+      type: selectedTestType.value,
+      id: result.id,
+      title: testTitle.value
+    })
 
+    // Show success message
+    alert(`${selectedTestType.value.charAt(0).toUpperCase() + selectedTestType.value.slice(1)} test created successfully!`)
+
+    // Reset form
+    resetForm()
+
+  } catch (err) {
+    console.error('Error saving test:', err)
+    console.error('Error stack:', err.stack)
+    error.value = err.message || 'Failed to save test. Please try again.'
+
+    // Show detailed error in alert for debugging
+    alert(`Error: ${err.message}\n\nCheck console for details.`)
+  } finally {
+    loading.value = false
+  }
+  // Add this at the beginning of saveTest function
+  console.log('=== Checking Storage Buckets ===')
+  const { data: buckets } = await supabase.storage.listBuckets()
+  console.log('Available buckets:', buckets?.map(b => b.name))
+  console.log('=== End Bucket Check ===')
+}
 
 const resetForm = () => {
-  // Only clear type when NOT editing
-  if (!isEditing.value) {
-    selectedTestType.value = null
-  }
-
+  selectedTestType.value = null
   testTitle.value = ''
   testDuration.value = 60
   writingDescription.value = ''
@@ -1369,7 +1344,7 @@ const resetForm = () => {
   loading.value = false
   error.value = ''
 
-  // do NOT clear testParts when editing:
+  // Clean up all image previews in test parts
   testParts.forEach(part => {
     part.sections.forEach(section => {
       if (section.imagePreview) {
@@ -1390,7 +1365,7 @@ const resetForm = () => {
         questionType: 'note_completion',
         questions: [{
           text: '',
-          answers: [],
+          answer: [],
           options: [],
           correctOption: null,
           matchingItems: [],
@@ -1400,8 +1375,12 @@ const resetForm = () => {
     ]
   })
 
-  if (!isEditing.value) {
-    testParts.splice(0, testParts.length, createEmptyPart())
+  // Reset writing tasks
+  if (writingTasks.task1.imagePreview) {
+    URL.revokeObjectURL(writingTasks.task1.imagePreview)
+  }
+  if (writingTasks.task2.imagePreview) {
+    URL.revokeObjectURL(writingTasks.task2.imagePreview)
   }
 
   writingTasks.task1 = {
@@ -1413,6 +1392,7 @@ const resetForm = () => {
     recommendedTime: 20,
     description: ''
   }
+
   writingTasks.task2 = {
     title: '',
     question: '',
@@ -1426,50 +1406,6 @@ const resetForm = () => {
 
   step.value = 1
 }
-
-// const resetForm = () => {
-//   selectedTestType.value = null
-//   testTitle.value = ''
-//   testDuration.value = 60
-//   writingDescription.value = ''
-//   audioFileName.value = ''
-//   audioFile.value = null
-//   loading.value = false
-//   error.value = ''
-//
-//   // Clean up all image previews in test parts
-//
-//   // Reset writing tasks
-//   if (writingTasks.task1.imagePreview) {
-//     URL.revokeObjectURL(writingTasks.task1.imagePreview)
-//   }
-//   if (writingTasks.task2.imagePreview) {
-//     URL.revokeObjectURL(writingTasks.task2.imagePreview)
-//   }
-//
-//   writingTasks.task1 = {
-//     title: '',
-//     question: '',
-//     imageFile: null,
-//     imagePreview: null,
-//     minWords: 150,
-//     recommendedTime: 20,
-//     description: ''
-//   }
-//
-//   writingTasks.task2 = {
-//     title: '',
-//     question: '',
-//     imageFile: null,
-//     imagePreview: null,
-//     minWords: 250,
-//     recommendedTime: 40,
-//     essayType: 'opinion',
-//     description: ''
-//   }
-//
-//   step.value = 1
-// }
 const addBlank = (question) => {
   if (!Array.isArray(question.answers)) {
     question.answers = []
