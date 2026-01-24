@@ -310,59 +310,84 @@
                         </div>
 
                         <!-- Matching Options -->
-                        <div v-if="section.questionType === 'matching'" class="space-y-3">
-                          <label class="block text-sm font-medium text-gray-700 mb-1">Matching Pairs</label>
-                          <div class="grid grid-cols-2 gap-4">
-                            <!-- Left Column (Items) -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">Items to Match</label>
-                              <div v-for="(item, itemIndex) in question.matchingItems" :key="itemIndex" class="mb-2">
-                                <input
-                                    v-model="item.name"
-                                    type="text"
-                                    class="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    :placeholder="`Item ${itemIndex + 1}`"
-                                />
-                              </div>
-                              <button
-                                  @click="addMatchingItem(partIndex, sectionIndex, qIndex)"
-                                  class="text-sm text-blue-600 hover:text-blue-800"
+                        <div v-if="section.questionType === 'matching'" class="space-y-4">
+                          <label class="block text-sm font-medium text-gray-700">
+                            Matching Pairs
+                          </label>
+
+                          <div class="space-y-3">
+                            <div
+                                v-for="(item, itemIndex) in question.matchingItems"
+                                :key="itemIndex"
+                                class="border rounded-md p-3 bg-gray-50"
+                            >
+                              <!-- Item text -->
+                              <input
+                                  v-model="item.name"
+                                  type="text"
+                                  class="w-full mb-2 px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                  :placeholder="`Item ${itemIndex + 1}`"
+                              />
+
+                              <!-- Select correct option -->
+                              <select
+                                  v-model="item.matchedOption"
+                                  class="w-full px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                               >
-                                + Add Item
+                                <option disabled value="">Select matching option</option>
+                                <option
+                                    v-for="(option, optIndex) in question.matchingOptions"
+                                    :key="optIndex"
+                                    :value="String.fromCharCode(65 + optIndex)"
+                                >
+                                  {{ String.fromCharCode(65 + optIndex) }}. {{ option.text }}
+                                </option>
+                              </select>
+                            </div>
+
+                            <button
+                                @click="addMatchingItem(partIndex, sectionIndex, qIndex)"
+                                class="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Item
+                            </button>
+                          </div>
+
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                              Options
+                            </label>
+
+                            <div
+                                v-for="(option, optIndex) in question.matchingOptions"
+                                :key="optIndex"
+                                class="flex items-center gap-2 mb-2"
+                            >
+      <span class="w-6 text-sm font-medium">
+        {{ String.fromCharCode(65 + optIndex) }}.
+      </span>
+
+                              <input
+                                  v-model="option.text"
+                                  type="text"
+                                  class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                  :placeholder="`Option ${optIndex + 1}`"
+                              />
+
+                              <button
+                                  @click="removeMatchingOption(partIndex, sectionIndex, qIndex, optIndex)"
+                                  class="text-red-500 hover:text-red-700"
+                              >
+                                &times;
                               </button>
                             </div>
 
-                            <!-- Right Column (Options) -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">Options to Match With</label>
-                              <div v-for="(option, optIndex) in question.matchingOptions" :key="optIndex" class="mb-2">
-                                <div class="flex items-center gap-2">
-                                  <input
-                                      type="checkbox"
-                                      v-model="option.selected"
-                                      class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                  />
-                                  <input
-                                      v-model="option.text"
-                                      type="text"
-                                      class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      :placeholder="`Option ${optIndex + 1}`"
-                                  />
-                                  <button
-                                      @click="removeMatchingOption(partIndex, sectionIndex, qIndex, optIndex)"
-                                      class="text-red-500 hover:text-red-700"
-                                  >
-                                    &times;
-                                  </button>
-                                </div>
-                              </div>
-                              <button
-                                  @click="addMatchingOption(partIndex, sectionIndex, qIndex)"
-                                  class="text-sm text-blue-600 hover:text-blue-800"
-                              >
-                                + Add Option
-                              </button>
-                            </div>
+                            <button
+                                @click="addMatchingOption(partIndex, sectionIndex, qIndex)"
+                                class="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Option
+                            </button>
                           </div>
                         </div>
 
@@ -845,16 +870,6 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imagePreview = null
 }
 
-// const addQuestion = (partIndex, sectionIndex) => {
-//   testParts[partIndex].sections[sectionIndex].questions.push({
-//     text: '',
-//     answer: '',
-//     options: [],
-//     correctOption: null,
-//     matchingItems: [],
-//     matchingOptions: []
-//   })
-// }
 // In your component script, update the question structure
 const addQuestion = (partIndex, sectionIndex) => {
   testParts[partIndex].sections[sectionIndex].questions.push(
@@ -1110,24 +1125,24 @@ const saveTest = async () => {
                 text: option.text
               }))
             }
-
-            // Prepare matching items and options
             let matchingItems = null
             let matchingOptions = null
+
             if (section.questionType === 'matching') {
               if (question.matchingItems?.length > 0) {
                 matchingItems = question.matchingItems.map(item => ({
                   name: item.name,
-                  matchedOption: item.matchedOption
+                  matchedOption: item.matchedOption // 'A', 'B', ...
                 }))
               }
+
               if (question.matchingOptions?.length > 0) {
                 matchingOptions = question.matchingOptions.map(option => ({
-                  text: option.text,
-                  selected: option.selected
+                  text: option.text // ❌ без selected
                 }))
               }
             }
+
             const questionData = {
               text: question.text, // ✅ ВАЖНО
               type: section.questionType,
@@ -1139,6 +1154,14 @@ const saveTest = async () => {
                 sectionResult.id,
                 qIndex + 1
             )
+            // ✅ Multiple choice options
+            if (section.questionType === 'multiple_choice') {
+              await testService.createListeningOptions(
+                  createdQuestion.id,
+                  question.options,
+                  question.correctOption
+              )
+            }
 
             // 2️⃣ сохраняем answers ТОЛЬКО для note_completion
             if (section.questionType === 'note_completion') {
@@ -1148,11 +1171,7 @@ const saveTest = async () => {
               )
             }
 
-            // await testService.createListeningQuestion(
-            //     questionData,
-            //     sectionResult.id,
-            //     qIndex + 1
-            // )
+
           }
         }
       }
@@ -1217,119 +1236,50 @@ const saveTest = async () => {
                 qIndex + 1
             )
 
-            // 5️⃣ Save answers ONLY for note_completion
             if (section.questionType === 'note_completion') {
               await testService.createReadingAnswers(
                   createdQuestion.id,
                   question.answers
               )
             }
+
+            if (section.questionType === 'multiple_choice') {
+              if (question.correctOption === undefined) {
+                throw new Error('Correct option not selected')
+              }
+
+              const validOptions = question.options.filter(
+                  opt => opt.text && opt.text.trim() !== ''
+              )
+
+              await testService.createReadingOptions(
+                  createdQuestion.id,
+                  validOptions,
+                  question.correctOption
+              )
+            }
+            if (section.questionType === 'matching') {
+
+              // 1️⃣ options
+              const createdOptions =
+                  await testService.createReadingMatchingOptions(
+                      createdQuestion.id,
+                      question.matchingOptions
+                  )
+
+              // 2️⃣ items (with correct match)
+              await testService.createReadingMatchingItems(
+                  createdQuestion.id,
+                  question.matchingItems,
+                  createdOptions
+              )
+            }
+
           }
         }
       }
     }
 
-        // else if (selectedTestType.value === 'reading') {
-    //   console.log('=== Creating Reading Test ===')
-    //
-    //   // Create reading test
-    //   const testResult = await testService.createReadingTest(testData, userId)
-    //   console.log('Reading test created with ID:', testResult.id)
-    //   result = testResult
-    //
-    //   // Create sections and questions
-    //   for (let partIndex = 0; partIndex < testParts.length; partIndex++) {
-    //     const part = testParts[partIndex]
-    //
-    //     for (let sectionIndex = 0; sectionIndex < part.sections.length; sectionIndex++) {
-    //       const section = part.sections[sectionIndex]
-    //
-    //       // Upload section image if exists
-    //       let imageUrl = null
-    //       if (section.imageFile) {
-    //         console.log(`Uploading image for Part ${partIndex + 1}, Section ${sectionIndex + 1}...`)
-    //         try {
-    //           imageUrl = await testService.uploadSectionImage(
-    //               section.imageFile,
-    //               testResult.id,
-    //               partIndex + 1,
-    //               sectionIndex + 1
-    //           )
-    //           console.log('Section image uploaded. URL:', imageUrl)
-    //         } catch (uploadError) {
-    //           console.error('Section image upload failed:', uploadError)
-    //           // Continue without image
-    //         }
-    //       }
-    //
-    //       // Create section
-    //       const sectionData = {
-    //         title: section.title,
-    //         content: section.content,
-    //         questionType: section.questionType,
-    //         imageUrl: imageUrl,
-    //         questions: section.questions
-    //       }
-    //
-    //       const sectionResult = await testService.createReadingSection(
-    //           sectionData,
-    //           testResult.id,
-    //           partIndex + 1,
-    //           sectionIndex + 1
-    //       )
-    //       console.log('Section created with ID:', sectionResult.id)
-    //
-    //       // Create questions
-    //       for (let qIndex = 0; qIndex < section.questions.length; qIndex++) {
-    //         const question = section.questions[qIndex]
-    //
-    //         // Prepare options for multiple choice
-    //         let options = null
-    //         if (section.questionType === 'multiple_choice' && question.options?.length > 0) {
-    //           options = question.options.map(option => ({
-    //             id: option.id,
-    //             text: option.text
-    //           }))
-    //         }
-    //
-    //         // Prepare matching items and options
-    //         let matchingItems = null
-    //         let matchingOptions = null
-    //         if (section.questionType === 'matching') {
-    //           if (question.matchingItems?.length > 0) {
-    //             matchingItems = question.matchingItems.map(item => ({
-    //               name: item.name,
-    //               matchedOption: item.matchedOption
-    //             }))
-    //           }
-    //           if (question.matchingOptions?.length > 0) {
-    //             matchingOptions = question.matchingOptions.map(option => ({
-    //               text: option.text,
-    //               selected: option.selected
-    //             }))
-    //           }
-    //         }
-    //
-    //         const questionData = {
-    //           text: question.text,
-    //           answer: question.answer || '',
-    //           type: section.questionType,
-    //           options: options,
-    //           correctOption: question.correctOption,
-    //           matchingItems: matchingItems,
-    //           matchingOptions: matchingOptions
-    //         }
-    //
-    //         await testService.createReadingQuestion(
-    //             questionData,
-    //             sectionResult.id,
-    //             qIndex + 1
-    //         )
-    //       }
-    //     }
-    //   }
-    //
-    // }
     else if (selectedTestType.value === 'writing') {
       console.log('=== Creating Writing Test ===')
 

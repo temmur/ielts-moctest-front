@@ -200,32 +200,6 @@ export const testService = {
             throw error
         }
     },
-
-    // async createListeningQuestion(questionData, sectionId, questionNumber) {
-    //     try {
-    //         const { data, error } = await supabase
-    //             .from('listening_questions')
-    //             .insert([{
-    //                 section_id: sectionId,
-    //                 question_text: questionData.text,
-    //                 question_number: questionNumber,
-    //                 question_type: questionData.type,
-    //                 correct_answer: questionData.answer,
-    //                 options: questionData.options?.length > 0 ? questionData.options : null,
-    //                 correct_option: questionData.correctOption || null,
-    //                 matching_items: questionData.matchingItems?.length > 0 ? questionData.matchingItems : null,
-    //                 matching_options: questionData.matchingOptions?.length > 0 ? questionData.matchingOptions : null
-    //             }])
-    //             .select()
-    //             .single()
-    //
-    //         if (error) throw error
-    //         return data
-    //     } catch (error) {
-    //         console.error('Error creating listening question:', error)
-    //         throw error
-    //     }
-    // },
     async createListeningQuestion(questionData, sectionId, questionNumber) {
         const { data, error } = await supabase
             .from('listening_questions')
@@ -242,6 +216,20 @@ export const testService = {
         return data
     },
 
+    async createListeningOptions(questionId, options, correctOptionId) {
+        const payload = options.map((option, index) => ({
+            question_id: questionId,
+            option_label: String.fromCharCode(65 + index),
+            option_text: option.text,
+            is_correct: option.id === correctOptionId
+        }))
+
+        const { error } = await supabase
+            .from('listening_options')
+            .insert(payload)
+
+        if (error) throw error
+    },
 
     async createListeningAnswers(questionId, answers) {
         if (!Array.isArray(answers) || answers.length === 0) return
@@ -373,6 +361,58 @@ export const testService = {
 
         if (error) throw error
         return data
+    },
+    async createReadingOptions(questionId, options, correctOptionId) {
+        const payload = options.map((option, index) => ({
+            question_id: questionId,
+            option_label: String.fromCharCode(65 + index),
+            option_text: option.text,
+            is_correct: option.id === correctOptionId
+        }))
+
+        const { error } = await supabase
+            .from('reading_options')
+            .insert(payload)
+
+        if (error) throw error
+    },
+    async createReadingMatchingOptions(questionId, options) {
+        const payload = options
+            .filter(o => o.text && o.text.trim() !== '')
+            .map((option, index) => ({
+                question_id: questionId,
+                option_label: String.fromCharCode(65 + index),
+                option_text: option.text
+            }))
+
+        const { data, error } = await supabase
+            .from('reading_matching_options')
+            .insert(payload)
+            .select()
+
+        if (error) throw error
+        return data
+    },
+    async createReadingMatchingItems(questionId, items, optionsFromDB) {
+        const payload = items
+            .filter(i => i.name && i.name.trim() !== '')
+            .map(item => {
+                const matchedOption = optionsFromDB.find(
+                    opt => opt.option_label === item.matchedOption
+                )
+
+                return {
+                    question_id: questionId,
+                    item_text: item.name,
+                    correct_option_id: matchedOption?.id || null
+                }
+            })
+
+        const { error } = await supabase
+            .from('reading_matching_items')
+            .insert(payload)
+
+        if (error) throw error
     },
     async createReadingAnswers(questionId, answers) {
         if (!Array.isArray(answers) || answers.length === 0) return
