@@ -3,11 +3,12 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { supabase } from '@/supabase'
 import { useAuth } from '@/composables/useAuth'
+import { Icon } from '@iconify/vue'
 
 const { logout } = useAuth()
 
 const router = useRouter()
-
+const showPassword = ref(false)
 const email = ref('')
 const password = ref('')
 const errorMessage = ref('')
@@ -33,7 +34,7 @@ const login = async () => {
     return
   }
 
-  router.push('/test/listening')
+  router.push('teacher-panel')
 }
 
 </script>
@@ -51,7 +52,7 @@ const login = async () => {
         Login to continue to the platform
       </p>
 
-      <div class="space-y-4">
+      <div class="relative space-y-4">
         <input
             v-model="email"
             type="email"
@@ -61,10 +62,19 @@ const login = async () => {
 
         <input
             v-model="password"
-            type="password"
-            placeholder="Password"
-            class="w-full px-4 py-3 rounded-xl bg-slate-800/60 text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500"
+            autocomplete="off"
+            :type="showPassword ? 'text' : 'password'"
+            placeholder="enter your pasword here..."
+            class="w-full px-4 py-3 mb-4 rounded-xl bg-slate-800/60 text-white placeholder-slate-400 outline-none focus:ring-2 focus:ring-indigo-500 "
         />
+        <button
+            type="button"
+            @click="showPassword = !showPassword"
+            class="cursor-pointer absolute right-2 top-1/2 -translate-y-1/2 text-gray-500 mt-6"
+        >
+          <Icon :icon="showPassword ? 'mdi:eye-off' :'mdi:eye'" width="20" height="20"/>
+
+        </button>
       </div>
 
       <button

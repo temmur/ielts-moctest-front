@@ -291,11 +291,21 @@ const deleteTest = async (type: TestType, testId: string) => {
 
 // ✅ Open edit modal
 const openEdit = (type: TestType, test: any) => {
-  console.log("OPEN EDIT:", type, test?.id); // ✅ проверка
-  activeType.value = type;
-  selectedTest.value = JSON.parse(JSON.stringify(test)); // копия
-  showUpdateModal.value = true;
-};
+  activeType.value = type
+
+  const cloned = JSON.parse(JSON.stringify(test))
+
+  // Normalize old DB structure
+  if (!cloned.content && cloned.sections) {
+    cloned.content = cloned.sections
+    delete cloned.sections
+  }
+
+  selectedTest.value = cloned
+  showUpdateModal.value = true
+}
+
+
 
 const closeEdit = () => {
   showUpdateModal.value = false;
@@ -306,10 +316,12 @@ const closeEdit = () => {
 const handleTestUpdated = async (updatedTest: any) => {
   if (!activeType.value || !updatedTest?.id) return
 
-  // ❗️Важно: чтобы не отправить лишние поля, уберём created_at и т.п. (если есть)
-  const payload = { ...updatedTest }
-  delete payload.created_at
-  delete payload.updated_at
+  const payload = {
+    title: updatedTest.title,
+    time_limit: updatedTest.time_limit,
+    content: updatedTest.content
+  }
+
 
   const { error } = await supabase
       .from(activeType.value + '_tests')
@@ -318,7 +330,7 @@ const handleTestUpdated = async (updatedTest: any) => {
 
   if (error) {
     console.error(error)
-    alert('Update error: ' + error.message)
+    alert(error.message)
     return
   }
 
@@ -339,7 +351,7 @@ const handleTestAdded = () => {
 }
 
 // ✅ lock scroll for BOTH modals
-watch([showAddTestModal, showUpdateTestModal], ([addOpen, updateOpen]) => {
+watch([showAddTestModal, showUpdateModal], ([addOpen, updateOpen]) => {
   const anyOpen = addOpen || updateOpen
   document.body.style.overflowY = anyOpen ? 'hidden' : 'auto'
 })
