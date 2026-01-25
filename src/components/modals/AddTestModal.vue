@@ -1,4 +1,3 @@
-AddTestModal.vue:
 <template>
   <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
     <div class="relative top-10 mx-auto p-5 border w-4/5 max-w-6xl shadow-lg rounded-md bg-white h-[90vh] overflow-y-scroll">
@@ -274,6 +273,7 @@ AddTestModal.vue:
                           </button>
                         </div>
 
+
                         <!-- Multiple Choice Options -->
                         <div v-if="section.questionType === 'multiple_choice'" class="space-y-2">
                           <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
@@ -353,37 +353,41 @@ AddTestModal.vue:
                             </button>
                           </div>
 
-                            <!-- Right Column (Options) -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">Options to Match With</label>
-                              <div v-for="(option, optIndex) in question.matchingOptions" :key="optIndex" class="mb-2">
-                                <div class="flex items-center gap-2">
-                                  <input
-                                      type="checkbox"
-                                      v-model="option.selected"
-                                      class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                                  />
-                                  <input
-                                      v-model="option.text"
-                                      type="text"
-                                      class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                      :placeholder="`Option ${optIndex + 1}`"
-                                  />
-                                  <button
-                                      @click="removeMatchingOption(partIndex, sectionIndex, qIndex, optIndex)"
-                                      class="text-red-500 hover:text-red-700"
-                                  >
-                                    &times;
-                                  </button>
-                                </div>
-                              </div>
+                          <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">
+                              Options
+                            </label>
+
+                            <div
+                                v-for="(option, optIndex) in question.matchingOptions"
+                                :key="optIndex"
+                                class="flex items-center gap-2 mb-2"
+                            >
+      <span class="w-6 text-sm font-medium">
+        {{ String.fromCharCode(65 + optIndex) }}.
+      </span>
+
+                              <input
+                                  v-model="option.text"
+                                  type="text"
+                                  class="flex-1 px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                  :placeholder="`Option ${optIndex + 1}`"
+                              />
+
                               <button
-                                  @click="addMatchingOption(partIndex, sectionIndex, qIndex)"
-                                  class="text-sm text-blue-600 hover:text-blue-800"
+                                  @click="removeMatchingOption(partIndex, sectionIndex, qIndex, optIndex)"
+                                  class="text-red-500 hover:text-red-700"
                               >
-                                + Add Option
+                                &times;
                               </button>
                             </div>
+
+                            <button
+                                @click="addMatchingOption(partIndex, sectionIndex, qIndex)"
+                                class="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Option
+                            </button>
                           </div>
                         </div>
 
@@ -712,7 +716,7 @@ AddTestModal.vue:
         </div>
       </div>
     </div>
-
+  </div>
 </template>
 
 <script setup>
@@ -866,6 +870,7 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imagePreview = null
 }
 
+// In your component script, update the question structure
 const addQuestion = (partIndex, sectionIndex) => {
   testParts[partIndex].sections[sectionIndex].questions.push(
       createEmptyQuestion()
@@ -1120,8 +1125,6 @@ const saveTest = async () => {
                 text: option.text
               }))
             }
-
-            // Prepare matching items and options
             let matchingItems = null
             let matchingOptions = null
 
@@ -1135,8 +1138,7 @@ const saveTest = async () => {
 
               if (question.matchingOptions?.length > 0) {
                 matchingOptions = question.matchingOptions.map(option => ({
-                  text: option.text,
-                  selected: option.selected
+                  text: option.text // ❌ без selected
                 }))
               }
             }
@@ -1152,6 +1154,14 @@ const saveTest = async () => {
                 sectionResult.id,
                 qIndex + 1
             )
+            // ✅ Multiple choice options
+            if (section.questionType === 'multiple_choice') {
+              await testService.createListeningOptions(
+                  createdQuestion.id,
+                  question.options,
+                  question.correctOption
+              )
+            }
 
             // 2️⃣ сохраняем answers ТОЛЬКО для note_completion
             if (section.questionType === 'note_completion') {
@@ -1161,11 +1171,7 @@ const saveTest = async () => {
               )
             }
 
-            // await testService.createListeningQuestion(
-            //     questionData,
-            //     sectionResult.id,
-            //     qIndex + 1
-            // )
+
           }
         }
       }
@@ -1189,7 +1195,6 @@ const saveTest = async () => {
           // Upload image if exists (опционально)
           let imageUrl = null
           if (section.imageFile) {
-            console.log(`Uploading image for Part ${partIndex + 1}, Section ${sectionIndex + 1}...`)
             try {
               imageUrl = await testService.uploadSectionImage(
                   section.imageFile,
@@ -1210,10 +1215,8 @@ const saveTest = async () => {
                 questionType: section.questionType
               },
               testResult.id,
-              partIndex + 1,
               sectionIndex + 1
           )
-          console.log('Section created with ID:', sectionResult.id)
 
           console.log('Section created:', sectionResult.id)
 
@@ -1233,18 +1236,49 @@ const saveTest = async () => {
                 qIndex + 1
             )
 
-            // 5️⃣ Save answers ONLY for note_completion
             if (section.questionType === 'note_completion') {
               await testService.createReadingAnswers(
                   createdQuestion.id,
                   question.answers
               )
             }
+
+            if (section.questionType === 'multiple_choice') {
+              if (question.correctOption === undefined) {
+                throw new Error('Correct option not selected')
+              }
+
+              const validOptions = question.options.filter(
+                  opt => opt.text && opt.text.trim() !== ''
+              )
+
+              await testService.createReadingOptions(
+                  createdQuestion.id,
+                  validOptions,
+                  question.correctOption
+              )
+            }
+            if (section.questionType === 'matching') {
+
+              // 1️⃣ options
+              const createdOptions =
+                  await testService.createReadingMatchingOptions(
+                      createdQuestion.id,
+                      question.matchingOptions
+                  )
+
+              // 2️⃣ items (with correct match)
+              await testService.createReadingMatchingItems(
+                  createdQuestion.id,
+                  question.matchingItems,
+                  createdOptions
+              )
+            }
+
           }
         }
       }
     }
-
 
     else if (selectedTestType.value === 'writing') {
       console.log('=== Creating Writing Test ===')
@@ -1420,6 +1454,12 @@ const resetForm = () => {
   }
 
   step.value = 1
+}
+const addBlank = (question) => {
+  if (!Array.isArray(question.answers)) {
+    question.answers = []
+  }
+  question.answers.push('')
 }
 </script>
 
