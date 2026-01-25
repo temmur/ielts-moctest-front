@@ -2,16 +2,18 @@
 import { ref, onMounted, watch } from 'vue'
 import { supabase } from '@/lib/supabase'
 import AddTestModal from "@/components/modals/AddTestModal.vue"
+import UpdateTestModal from "@/components/UpdateTestModal.vue"
 import CButton from "@/components/forms/CButton.vue"
 
 /* ================= STATE ================= */
 const loading = ref(true)
-const showModal = ref(false)                  // single modal for add/edit
-const modalMode = ref<'add' | 'edit'>('add') // mode for modal
-const editingTest = ref<any>(null)           // full test object
+
+const showAddModal = ref(false)
+const showEditModal = ref(false)
+
+const editingTest = ref<any>(null)
 const editingTestType = ref<'listening' | 'reading' | 'writing' | ''>('')
 
-// All tests
 const listeningTests = ref<any[]>([])
 const readingTests = ref<any[]>([])
 const writingTests = ref<any[]>([])
@@ -27,54 +29,54 @@ const loadTests = async () => {
   writingTests.value = w || []
 }
 
-/* ================= OPEN MODAL ================= */
-// Add test
+/* ================= OPEN ADD ================= */
 const openAddTestModal = () => {
-  modalMode.value = 'add'
-  editingTest.value = null
-  editingTestType.value = ''
-  showModal.value = true
+  showAddModal.value = true
 }
 
-// Edit test
+/* ================= OPEN EDIT ================= */
 const openEditModal = async (test: any, type: 'listening' | 'reading' | 'writing') => {
-  modalMode.value = 'edit'
   editingTestType.value = type
 
   try {
     const testWithDetails: any = { ...test }
 
-    // Listening test: load sections → questions
     if (type === 'listening') {
-      const { data: sections } = await supabase.from('listening_sections').select('*').eq('test_id', test.id)
-      if (sections?.length) {
-        for (const section of sections) {
-          const { data: questions } = await supabase
-              .from('listening_questions')
-              .select('*')
-              .eq('section_id', section.id)
-          section.questions = questions || []
-        }
+      const { data: sections } = await supabase
+          .from('listening_sections')
+          .select('*')
+          .eq('test_id', test.id)
+
+      for (const section of sections || []) {
+        const { data: questions } = await supabase
+            .from('listening_questions')
+            .select('*')
+            .eq('section_id', section.id)
+
+        section.questions = questions || []
       }
+
       testWithDetails.sections = sections || []
     }
 
-    // Reading test: load sections → questions
     if (type === 'reading') {
-      const { data: sections } = await supabase.from('reading_sections').select('*').eq('test_id', test.id)
-      if (sections?.length) {
-        for (const section of sections) {
-          const { data: questions } = await supabase
-              .from('reading_questions')
-              .select('*')
-              .eq('section_id', section.id)
-          section.questions = questions || []
-        }
+      const { data: sections } = await supabase
+          .from('reading_sections')
+          .select('*')
+          .eq('test_id', test.id)
+
+      for (const section of sections || []) {
+        const { data: questions } = await supabase
+            .from('reading_questions')
+            .select('*')
+            .eq('section_id', section.id)
+
+        section.questions = questions || []
       }
+
       testWithDetails.sections = sections || []
     }
 
-    // Writing test: prepare tasks
     if (type === 'writing') {
       testWithDetails.tasks = [
         { title: test.task1_title || '', question: test.task1_question || '', min_words: test.task1_min_words || 150 },
@@ -82,65 +84,32 @@ const openEditModal = async (test: any, type: 'listening' | 'reading' | 'writing
       ]
     }
 
-    editingTest.value = testWithDetails
-    showModal.value = true
+    editingTest.value = JSON.parse(JSON.stringify(testWithDetails))
+    showEditModal.value = true
 
   } catch (err) {
-    console.error('OPEN EDIT ERROR:', err)
-    alert('Failed to load test data')
+    console.error(err)
+    alert('Failed to load test')
   }
 }
 
-/* ================= DELETE TEST ================= */
+/* ================= DELETE ================= */
 const deleteTest = async (type: 'listening' | 'reading' | 'writing', id: string) => {
   if (!confirm('Delete test permanently?')) return
   await supabase.from(`${type}_tests`).delete().eq('id', id)
   await loadTests()
 }
 
-/* ================= HANDLE SAVED ================= */
+/* ================= SAVE HANDLER ================= */
 const handleSaved = async () => {
-  if (modalMode.value === 'edit' && editingTest.value) {
-    try {
-      // Update the test depending on type
-      const type = editingTestType.value
-      if (type === 'listening' || type === 'reading') {
-        await supabase.from(`${type}_tests`).update({
-          title: editingTest.value.title,
-          duration: editingTest.value.duration,
-          description: editingTest.value.description
-        }).eq('id', editingTest.value.id)
-
-        // Optionally update sections and questions here if needed
-        // Example: update section titles, questions text etc.
-
-      } else if (type === 'writing') {
-        await supabase.from('writing_tests').update({
-          title: editingTest.value.title,
-          duration: editingTest.value.duration,
-          description: editingTest.value.description,
-          task1_title: editingTest.value.tasks[0]?.title || '',
-          task1_question: editingTest.value.tasks[0]?.question || '',
-          task1_min_words: editingTest.value.tasks[0]?.min_words || 150,
-          task2_title: editingTest.value.tasks[1]?.title || '',
-          task2_question: editingTest.value.tasks[1]?.question || '',
-          task2_min_words: editingTest.value.tasks[1]?.min_words || 250
-        }).eq('id', editingTest.value.id)
-      }
-
-    } catch (err) {
-      console.error('EDIT SAVE ERROR:', err)
-      alert('Failed to save changes')
-    }
-  }
-
   await loadTests()
-  showModal.value = false
+  showAddModal.value = false
+  showEditModal.value = false
 }
 
-/* ================= MODAL BODY SCROLL ================= */
-watch(showModal, (v) => {
-  document.body.style.overflow = v ? 'hidden' : 'auto'
+/* ================= BODY SCROLL ================= */
+watch([showAddModal, showEditModal], ([a, e]) => {
+  document.body.style.overflow = (a || e) ? 'hidden' : 'auto'
 })
 
 /* ================= INIT ================= */
@@ -149,21 +118,17 @@ onMounted(async () => {
   loading.value = false
 })
 </script>
-
 <template>
   <div class="min-h-screen bg-gray-50 px-8 py-6">
     <div class="max-w-7xl mx-auto">
       <h1 class="text-3xl font-bold mb-8">Teacher Panel</h1>
 
-      <!-- Add Test Button -->
       <div class="flex justify-between mb-4">
         <h2 class="text-2xl font-semibold">Tests</h2>
         <CButton text="+ Add Test" variant="primary" @click="openAddTestModal"/>
       </div>
 
-      <!-- All Tests Grid -->
       <div class="grid md:grid-cols-3 gap-6">
-        <!-- Listening Tests -->
         <div v-for="t in listeningTests" :key="t.id" class="bg-white p-4 rounded shadow">
           <h3 class="font-medium">{{ t.title }}</h3>
           <p class="text-sm text-gray-500">Listening</p>
@@ -173,7 +138,6 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Reading Tests -->
         <div v-for="t in readingTests" :key="t.id" class="bg-white p-4 rounded shadow">
           <h3 class="font-medium">{{ t.title }}</h3>
           <p class="text-sm text-gray-500">Reading</p>
@@ -183,7 +147,6 @@ onMounted(async () => {
           </div>
         </div>
 
-        <!-- Writing Tests -->
         <div v-for="t in writingTests" :key="t.id" class="bg-white p-4 rounded shadow">
           <h3 class="font-medium">{{ t.title }}</h3>
           <p class="text-sm text-gray-500">Writing</p>
@@ -195,13 +158,18 @@ onMounted(async () => {
       </div>
     </div>
 
-     SINGLE MODAL FOR ADD & EDIT
     <AddTestModal
-        v-if="showModal"
-        :mode="modalMode"
-        :editingTest="editingTest"
-        @close="showModal = false"
+        v-if="showAddModal"
+        @close="showAddModal = false"
         @saved="handleSaved"
+    />
+
+    <UpdateTestModal
+        v-if="showEditModal"
+        :test="editingTest"
+        :type="editingTestType"
+        @close="showEditModal = false"
+        @save="handleSaved"
     />
   </div>
 </template>

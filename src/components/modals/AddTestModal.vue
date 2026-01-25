@@ -274,7 +274,6 @@ AddTestModal.vue:
                           </button>
                         </div>
 
-
                         <!-- Multiple Choice Options -->
                         <div v-if="section.questionType === 'multiple_choice'" class="space-y-2">
                           <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
@@ -311,27 +310,48 @@ AddTestModal.vue:
                         </div>
 
                         <!-- Matching Options -->
-                        <div v-if="section.questionType === 'matching'" class="space-y-3">
-                          <label class="block text-sm font-medium text-gray-700 mb-1">Matching Pairs</label>
-                          <div class="grid grid-cols-2 gap-4">
-                            <!-- Left Column (Items) -->
-                            <div>
-                              <label class="block text-sm font-medium text-gray-700 mb-2">Items to Match</label>
-                              <div v-for="(item, itemIndex) in question.matchingItems" :key="itemIndex" class="mb-2">
-                                <input
-                                    v-model="item.name"
-                                    type="text"
-                                    class="w-full px-3 py-1 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    :placeholder="`Item ${itemIndex + 1}`"
-                                />
-                              </div>
-                              <button
-                                  @click="addMatchingItem(partIndex, sectionIndex, qIndex)"
-                                  class="text-sm text-blue-600 hover:text-blue-800"
+                        <div v-if="section.questionType === 'matching'" class="space-y-4">
+                          <label class="block text-sm font-medium text-gray-700">
+                            Matching Pairs
+                          </label>
+
+                          <div class="space-y-3">
+                            <div
+                                v-for="(item, itemIndex) in question.matchingItems"
+                                :key="itemIndex"
+                                class="border rounded-md p-3 bg-gray-50"
+                            >
+                              <!-- Item text -->
+                              <input
+                                  v-model="item.name"
+                                  type="text"
+                                  class="w-full mb-2 px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
+                                  :placeholder="`Item ${itemIndex + 1}`"
+                              />
+
+                              <!-- Select correct option -->
+                              <select
+                                  v-model="item.matchedOption"
+                                  class="w-full px-3 py-1 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500"
                               >
-                                + Add Item
-                              </button>
+                                <option disabled value="">Select matching option</option>
+                                <option
+                                    v-for="(option, optIndex) in question.matchingOptions"
+                                    :key="optIndex"
+                                    :value="String.fromCharCode(65 + optIndex)"
+                                >
+                                  {{ String.fromCharCode(65 + optIndex) }}. {{ option.text }}
+                                </option>
+                              </select>
                             </div>
+
+                            <button
+                                @click="addMatchingItem(partIndex, sectionIndex, qIndex)"
+                                class="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Item
+                            </button>
+                          </div>
 
                             <!-- Right Column (Options) -->
                             <div>
@@ -692,7 +712,7 @@ AddTestModal.vue:
         </div>
       </div>
     </div>
-  </div>
+
 </template>
 
 <script setup>
@@ -846,17 +866,6 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imagePreview = null
 }
 
-// const addQuestion = (partIndex, sectionIndex) => {
-//   testParts[partIndex].sections[sectionIndex].questions.push({
-//     text: '',
-//     answer: '',
-//     options: [],
-//     correctOption: null,
-//     matchingItems: [],
-//     matchingOptions: []
-//   })
-// }
-// In your component script, update the question structure
 const addQuestion = (partIndex, sectionIndex) => {
   testParts[partIndex].sections[sectionIndex].questions.push(
       createEmptyQuestion()
@@ -1115,13 +1124,15 @@ const saveTest = async () => {
             // Prepare matching items and options
             let matchingItems = null
             let matchingOptions = null
+
             if (section.questionType === 'matching') {
               if (question.matchingItems?.length > 0) {
                 matchingItems = question.matchingItems.map(item => ({
                   name: item.name,
-                  matchedOption: item.matchedOption
+                  matchedOption: item.matchedOption // 'A', 'B', ...
                 }))
               }
+
               if (question.matchingOptions?.length > 0) {
                 matchingOptions = question.matchingOptions.map(option => ({
                   text: option.text,
@@ -1129,6 +1140,7 @@ const saveTest = async () => {
                 }))
               }
             }
+
             const questionData = {
               text: question.text, // ✅ ВАЖНО
               type: section.questionType,
@@ -1177,6 +1189,7 @@ const saveTest = async () => {
           // Upload image if exists (опционально)
           let imageUrl = null
           if (section.imageFile) {
+            console.log(`Uploading image for Part ${partIndex + 1}, Section ${sectionIndex + 1}...`)
             try {
               imageUrl = await testService.uploadSectionImage(
                   section.imageFile,
@@ -1197,8 +1210,10 @@ const saveTest = async () => {
                 questionType: section.questionType
               },
               testResult.id,
+              partIndex + 1,
               sectionIndex + 1
           )
+          console.log('Section created with ID:', sectionResult.id)
 
           console.log('Section created:', sectionResult.id)
 
@@ -1405,12 +1420,6 @@ const resetForm = () => {
   }
 
   step.value = 1
-}
-const addBlank = (question) => {
-  if (!Array.isArray(question.answers)) {
-    question.answers = []
-  }
-  question.answers.push('')
 }
 </script>
 
