@@ -89,18 +89,7 @@
 <!--})-->
 
 <!--// Reload after adding test-->
-<!--const handleTestAdded = () => {-->
-<!--  showAddTestModal.value = false-->
-<!--  loadTests()-->
-<!--}-->
-<!--watch(showAddTestModal, (newValue)=> {-->
-<!--  if(newValue) document.body.style.overflowY = 'hidden'-->
-<!--  else document.body.style.overflowY = 'auto'-->
-<!--})-->
-<!--const handleTextSizeChange = (size) => {-->
-<!--  console.log('Text size changed to:', size)-->
-<!--  // You can also store this in a global store-->
-<!--}-->
+
 
 <!--</script>-->
 <!--<template>-->
@@ -250,6 +239,11 @@ const loadStudents = async () => {
 
   students.value = data || []
 }
+const handleTestAdded = () => {
+ showAddTestModal.value = false
+  loadTests()
+}
+
 
 // Load all tests
 const loadTests = async () => {
@@ -290,18 +284,20 @@ const deleteTest = async (type: TestType, testId: string) => {
 }
 
 // ✅ Open edit modal
-const openEdit = (type: TestType, test: any) => {
+const openEdit = (type, test) => {
   activeType.value = type
 
-  const cloned = JSON.parse(JSON.stringify(test))
+  selectedTest.value = JSON.parse(JSON.stringify({
+    ...test,
+    content: test.content ?? [
+      {
+        title: 'Section 1',
+        questions: []
+      }
+    ]
+  }))
 
-  // Normalize old DB structure
-  if (!cloned.content && cloned.sections) {
-    cloned.content = cloned.sections
-    delete cloned.sections
-  }
 
-  selectedTest.value = cloned
   showUpdateModal.value = true
 }
 
@@ -319,9 +315,8 @@ const handleTestUpdated = async (updatedTest: any) => {
   const payload = {
     title: updatedTest.title,
     time_limit: updatedTest.time_limit,
-    content: updatedTest.content
+    content: updatedTest.content   // 🔥 THIS FIXES THE ERROR
   }
-
 
   const { error } = await supabase
       .from(activeType.value + '_tests')
@@ -329,7 +324,7 @@ const handleTestUpdated = async (updatedTest: any) => {
       .eq('id', updatedTest.id)
 
   if (error) {
-    console.error(error)
+    console.error('SUPABASE UPDATE ERROR:', error)
     alert(error.message)
     return
   }
@@ -338,6 +333,7 @@ const handleTestUpdated = async (updatedTest: any) => {
   closeEdit()
 }
 
+
 onMounted(async () => {
   await loadStudents()
   await loadTests()
@@ -345,10 +341,8 @@ onMounted(async () => {
 })
 
 // Reload after adding test
-const handleTestAdded = () => {
-  showAddTestModal.value = false
-  loadTests()
-}
+
+
 
 // ✅ lock scroll for BOTH modals
 watch([showAddTestModal, showUpdateModal], ([addOpen, updateOpen]) => {

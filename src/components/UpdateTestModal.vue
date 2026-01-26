@@ -9,23 +9,35 @@ const props = defineProps({
 
 const emit = defineEmits(['close', 'save'])
 
-// deep clone helper
-const clone = (v) => JSON.parse(JSON.stringify(v))
+// deep clone helper (safe + fast)
+const clone = (v) => JSON.parse(JSON.stringify(v || {}))
 
-const localTest = ref(clone(props.test))
+const localTest = ref({})
 
-watch(() => props.test, (v) => {
-  localTest.value = clone(v)
-}, { deep: true, immediate: true })
+watch(
+    () => props.test,
+    (v) => {
+      if (!v) return
 
-// ensure structure exists
-if (!localTest.value.content) localTest.value.content = []
+      localTest.value = clone(v)
 
-// ADD SECTION — duplicate first section structure
+      if (!Array.isArray(localTest.value.content)) {
+        localTest.value.content = [
+          { title: 'Section 1', instructions: '', questions: [] }
+        ]
+      }
+    },
+    { immediate: true }
+)
+
+
+// ADD SECTION — duplicate FIRST section STRUCTURE
 const addSection = () => {
+  const base = localTest.value.content[0]
+
   localTest.value.content.push({
     title: `Section ${localTest.value.content.length + 1}`,
-    instructions: '',
+    instructions: base?.instructions ?? '',
     questions: []
   })
 }

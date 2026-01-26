@@ -24,11 +24,27 @@ const addOption = () => {
 
     <!-- MCQ -->
     <div v-if="question.type === 'mcq'">
-      <div v-for="(opt, i) in question.options" :key="i">
-        <input v-model="question.options[i]" class="input" placeholder="Option" />
+      <div
+          v-for="(opt, i) in question.options"
+          :key="i"
+          class="flex items-center gap-2"
+      >
+        <input
+            type="radio"
+            :name="'mcq_' + question.id"
+            :value="opt"
+            v-model="question.answer"
+        />
+        <input
+            v-model="question.options[i]"
+            class="input flex-1"
+            placeholder="Option"
+        />
       </div>
-      <button @click="addOption" class="btn">+ Option</button>
+
+      <button @click="addOption" class="btn mt-2">+ Option</button>
     </div>
+
 
     <!-- Sentence Completion -->
     <div v-if="question.type === 'sentence_completion'">
