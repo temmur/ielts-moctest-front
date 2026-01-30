@@ -1032,12 +1032,21 @@ const saveTest = async () => {
     }
 
     const userId = currentUser.value.id
-
+    const partsPayload = testParts.map((p) => ({
+      description: p.description,
+      sections: p.sections.map((s) => ({
+        title: s.title,
+        content: s.content,
+        questionType: s.questionType,
+        questions: s.questions
+      }))
+    }))
     // Prepare test data based on type
     const testData = {
       title: testTitle.value,
       duration: testDuration.value,
-      description: writingDescription.value
+      description: writingDescription.value,
+      parts: partsPayload
     }
 
     let result
@@ -1212,7 +1221,7 @@ const saveTest = async () => {
               {
                 title: section.title,
                 content: section.content,
-                questionType: section.questionType
+                questionType: section.questionType,
               },
               testResult.id,
               sectionIndex + 1

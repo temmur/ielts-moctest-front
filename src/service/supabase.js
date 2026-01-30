@@ -304,21 +304,46 @@ export const testService = {
     //         throw error
     //     }
     // },
-    async createReadingSection(sectionData, testId, sectionNumber) {
+    // async createReadingSection(sectionData, testId, sectionNumber) {
+    //
+    //     const { data, error } = await supabase
+    //         .from('reading_sections')
+    //         .insert([{
+    //             test_id: testId,
+    //             section_number: sectionNumber,
+    //             passage_title: sectionData.title,
+    //             passage_text: sectionData.content,
+    //             question_type: sectionData.questionType,
+    //             image_url: sectionData.imageUrl || null,
+    //         }])
+    //         .select()
+    //         .single()
+    //
+    //     if (error) throw error
+    //     return data
+    // },
+    async createReadingSection(sectionData, testId, arg3, arg4) {
+        // ✅ поддержка старого и нового вызова
+        // old: createReadingSection(sectionData, testId, partNumber, sectionNumber)
+        // new: createReadingSection(sectionData, testId, sectionNumber)
+
+        const sectionNumber =
+            typeof arg4 === "number" ? arg4 : arg3;
+
         const { data, error } = await supabase
-            .from('reading_sections')
+            .from("reading_sections")
             .insert([{
                 test_id: testId,
                 section_number: sectionNumber,
-                passage_title: sectionData.title,
-                passage_text: sectionData.content,
-                question_type: sectionData.questionType
+                passage_title: sectionData.title || "",
+                passage_text: sectionData.content || "",
+                question_type: sectionData.questionType || "note_completion",
             }])
             .select()
-            .single()
+            .single();
 
-        if (error) throw error
-        return data
+        if (error) throw error;
+        return data;
     },
 
     // async createReadingQuestion(questionData, sectionId, questionNumber) {
