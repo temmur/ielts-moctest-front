@@ -1,88 +1,40 @@
-
-
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, watch } from 'vue'
+import { ref, computed, onMounted, onBeforeUnmount, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import { supabase } from '@/lib/supabase'
+
 import SentenceCompletion from '@/components/questions/SentenceCompletion.vue'
 import MultipleChoice from '@/components/questions/MultipleChoice.vue'
 import Matching from '@/components/questions/Matching.vue'
 
 /* =========================
-   BASIC STATE
+   STATE
 ========================= */
 const router = useRouter()
-
 const locked = ref(false)
-const timeLeft = ref(180)
+const timeLeft = ref(0)
 let timer: number | null = null
 
 const audioRef = ref<HTMLAudioElement | null>(null)
 const answers = ref<Record<number, any>>({})
 
-/* =========================
-   TEST DATA
-========================= */
-const test = ref({
-  id: 1,
-  title: 'Cambridge Academic Listening Test 1',
-  audio_url: 'https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3',
-  duration: 180
-})
-
+const test = ref<any>(null)
+const parts = ref<any[]>([])
 const currentPartIndex = ref(0)
-
-const parts = ref([
-  {
-    part: 1,
-    questions: [
-      { id: 101, type: 'sentence', before: 'The library opens at', after: 'in the morning.', correct: '8 am' },
-      { id: 102, type: 'sentence', before: 'The train arrives at', after: 'every day.', correct: '7 am' }
-    ]
-  },
-  {
-    part: 2,
-    questions: [
-      { id: 201, type: 'mcq', text: 'What time does the tour start?', options: ['9 am', '10 am', '11 am'], correct: '10 am' }
-    ]
-  },
-  {
-    part: 3,
-    questions: [
-      {
-        id: 301,
-        type: 'matching',
-        left: ['John', 'Mary'],
-        right: ['Reception', 'Library', 'Cafeteria'],
-        correct: {
-          0: 'Library',
-          1: 'Cafeteria'
-        }
-      }
-    ]
-  },
-  {
-    part: 4,
-    questions: [
-      {
-        id: 401,
-        type: 'mcq',
-        text: 'Where Anna is going on her holiday?',
-        options: ['London', 'New York', 'Great Britain'],
-        correct: 'Great Britain'
-      }
-    ]
-  }
-])
+const userId = ref<string | null>(null)
 
 /* =========================
-   INITIALIZE MATCHING ANSWERS
+   COMPUTED
 ========================= */
-parts.value.forEach(part => {
-  part.questions.forEach(q => {
-    if (q.type === 'matching' && !answers.value[q.id]) {
-      answers.value[q.id] = {}
-    }
-  })
+const allQuestions = computed(() => {
+  let counter = 1
+  return parts.value.map(part => ({
+    ...part,
+    questions: part.questions.map(q => ({
+      ...q,
+      number: counter++
+    }))
+  }))
 })
 
 /* =========================
@@ -90,12 +42,8 @@ parts.value.forEach(part => {
 ========================= */
 const startTimer = () => {
   timer = window.setInterval(() => {
-    if (timeLeft.value > 0) {
-      timeLeft.value--
-    } else {
-      locked.value = true
-      submitListening()
-    }
+    if (timeLeft.value > 0) timeLeft.value--
+    else finishListening()
   }, 1000)
 }
 
@@ -106,67 +54,97 @@ const formatTime = (sec: number) => {
 }
 
 /* =========================
+   FETCH DATA
+========================= */
+onMounted(async () => {
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return router.push('/login')
+  userId.value = user.id
+
+  // TEST
+  const { data: testData } = await supabase
+      .from('tests')
+      .select('*')
+      .order('id', { ascending: false })
+      .limit(1)
+      .single()
+
+  if (!testData) return
+  test.value = testData
+  timeLeft.value = testData.duration ?? 0
+
+  // LISTENING SECTION
+  const { data: section } = await supabase
+      .from('sections')
+      .select('*')
+      .eq('test_id', testData.id)
+      .eq('type', 'listening')
+      .single()
+
+  if (!section) return
+
+  // QUESTIONS
+  const { data: rawQuestions } = await supabase
+      .from('questions')
+      .select('*')
+      .eq('section_id', section.id)
+      .order('id')
+
+  if (!rawQuestions || !rawQuestions.length) return
+
+  parts.value = [{
+    part: 1,
+    questions: rawQuestions.map(q => ({
+      id: q.id,
+      type: q.type ?? 'unknown',
+      ...(q.data ?? {}),        // 🔥 SAFETY KEY
+      correct: q.correct ?? null
+    }))
+  }]
+
+  // init answers
+  parts.value[0].questions.forEach(q => {
+    if (answers.value[q.id] === undefined) {
+      answers.value[q.id] = q.type === 'matching' ? {} : ''
+    }
+  })
+
+  startTimer()
+  console.log('TEST:', testData)
+  console.log('LISTENING SECTION:', listeningSection)
+  console.log('RAW QUESTIONS:', rawQuestions)
+
+})
+
+/* =========================
    NAVIGATION
 ========================= */
 const nextPart = () => {
-  if (currentPartIndex.value < parts.value.length - 1) {
+  if (currentPartIndex.value < allQuestions.value.length - 1)
     currentPartIndex.value++
-  }
 }
 
 /* =========================
-   SUBMIT + SCORING
+   FINISH
 ========================= */
-const submitListening = () => {
+const finishListening = async () => {
   if (timer) clearInterval(timer)
-
-  let total = 0
-  let correctCount = 0
-
-  parts.value.forEach(part => {
-    part.questions.forEach(q => {
-      total++
-
-      if (q.type === 'matching') {
-        const student = answers.value[q.id]
-        const correct = q.correct
-
-        let isCorrect = true
-        Object.keys(correct).forEach(key => {
-          if (student?.[key] !== correct[key]) {
-            isCorrect = false
-          }
-        })
-
-        if (isCorrect) correctCount++
-      } else {
-        if (answers.value[q.id] === q.correct) correctCount++
-      }
-    })
-  })
-
-  alert(`Your score: ${correctCount} / ${total}`)
+  locked.value = true
 
   localStorage.setItem('listeningAnswers', JSON.stringify(answers.value))
-  localStorage.setItem('listeningScore', `${correctCount}/${total}`)
 
   router.push('/test/reading')
 }
 
 /* =========================
-   LIFECYCLE
+   CLEANUP
 ========================= */
-onMounted(() => {
-  timeLeft.value = test.value.duration
-  startTimer()
-})
-
 onBeforeUnmount(() => {
   if (timer) clearInterval(timer)
 })
 
-watch(answers, val => {
-  localStorage.setItem('listeningAnswers', JSON.stringify(val))
+watch(answers, v => {
+  localStorage.setItem('listeningAnswers', JSON.stringify(v))
 }, { deep: true })
 </script>
 
@@ -174,24 +152,25 @@ watch(answers, val => {
   <div class="min-h-screen bg-white">
 
     <!-- HEADER -->
-    <div class="sticky top-0 bg-white border-b z-10">
+    <div class="sticky top-0 bg-white border-b">
       <div class="max-w-6xl mx-auto px-6 py-4 flex justify-between">
         <h1 class="text-xl font-bold">
-          <span class="text-red-600 text-4xl mr-2">IELTS</span>
-          Listening
+          <span class="text-red-600 text-3xl mr-2">IELTS</span> Listening
         </h1>
-        <div class="text-lg font-mono text-red-600">
+        <div class="text-red-600 font-mono">
           ⏱ {{ formatTime(timeLeft) }}
         </div>
       </div>
     </div>
 
     <!-- AUDIO -->
-    <div class="max-w-6xl mx-auto px-6 py-6">
+    <div class="max-w-6xl mx-auto px-6 py-4">
       <audio
+          v-if="test?.audio_url"
           ref="audioRef"
           :src="test.audio_url"
           autoplay
+          controls
           class="w-full"
       />
       <p class="text-sm text-gray-500 mt-2">
@@ -200,16 +179,12 @@ watch(answers, val => {
     </div>
 
     <!-- QUESTIONS -->
-    <div class="max-w-6xl mx-auto px-6 py-6">
-      <h2 class="text-lg font-semibold mb-4">
-        Section {{ parts[currentPartIndex].part }}
-      </h2>
+    <div v-if="allQuestions.length" class="max-w-6xl mx-auto px-6 py-6">
+      <div v-for="q in allQuestions[currentPartIndex].questions" :key="q.id" class="mb-6">
+        <p class="font-medium mb-2">
+          {{ q.number }}. {{ q.text || q.question || q.before || 'Question' }}
+        </p>
 
-      <div
-          v-for="q in parts[currentPartIndex].questions"
-          :key="q.id"
-          class="mb-6"
-      >
         <SentenceCompletion
             v-if="q.type === 'sentence'"
             :question="q"
@@ -230,22 +205,17 @@ watch(answers, val => {
             v-model="answers[q.id]"
             :locked="locked"
         />
+
+        <p v-else class="text-gray-400 text-sm">
+          Unsupported question type
+        </p>
       </div>
     </div>
 
-    <!-- BUTTONS -->
-    <div class="max-w-6xl mx-auto px-6 py-6 text-center">
+    <!-- ACTION -->
+    <div class="text-center py-6">
       <button
-          v-if="currentPartIndex < parts.length - 1"
-          @click="nextPart"
-          class="px-8 py-3 bg-indigo-600 text-white rounded hover:bg-indigo-500"
-      >
-        Next Section
-      </button>
-
-      <button
-          v-else
-          @click="submitListening"
+          @click="finishListening"
           class="px-8 py-3 bg-green-600 text-white rounded hover:bg-green-500"
       >
         Finish Listening
