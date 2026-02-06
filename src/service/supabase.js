@@ -1,5 +1,6 @@
 // src/services/supabase.js
 import { createClient } from '@supabase/supabase-js'
+import { testService as _testService } from "./testService";
 
 // const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
 // const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY
@@ -230,7 +231,24 @@ export const testService = {
 
         if (error) throw error
     },
+    // createListeningMatchingOptions: _testService.createListeningMatchingOptions,
+    async createListeningMatchingOptions(questionId, options) {
+        const payload = options
+            .filter(o => o.text && o.text.trim() !== '')
+            .map((option, index) => ({
+                question_id: questionId,
+                option_label: String.fromCharCode(65 + index),
+                option_text: option.text
+            }))
 
+        const { data, error } = await supabase
+            .from('listening_matching_options')
+            .insert(payload)
+            .select()
+
+        if (error) throw error
+        return data
+    },
     async createListeningAnswers(questionId, answers) {
         if (!Array.isArray(answers) || answers.length === 0) return
 

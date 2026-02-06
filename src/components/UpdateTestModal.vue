@@ -1,739 +1,5 @@
-<!--<template>-->
-<!--  <teleport to="body">-->
-<!--    <transition name="fade">-->
-<!--      <div-->
-<!--          v-if="modelValue"-->
-<!--          class="fixed inset-0 z-[9999] flex items-center justify-center px-4"-->
-<!--      >-->
-<!--        &lt;!&ndash; Backdrop &ndash;&gt;-->
-<!--        <div-->
-<!--            class="absolute inset-0 bg-black/50 backdrop-blur-[2px]"-->
-<!--            @click="close"-->
-<!--        />-->
-
-<!--        &lt;!&ndash; Modal &ndash;&gt;-->
-<!--        <div-->
-<!--            class="relative w-full max-w-5xl rounded-2xl bg-white shadow-2xl overflow-hidden"-->
-<!--        >-->
-<!--          &lt;!&ndash; Header &ndash;&gt;-->
-<!--          <div class="flex items-center justify-between border-b px-6 py-4">-->
-<!--            <div>-->
-<!--              <h2 class="text-xl font-semibold">Update Test</h2>-->
-<!--              <p class="text-sm text-gray-500">-->
-<!--                Edit title, instructions, sections, questions and answers-->
-<!--              </p>-->
-<!--            </div>-->
-
-<!--            <div class="flex items-center gap-2">-->
-<!--              <button-->
-<!--                  class="rounded-xl border px-4 py-2 text-sm hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                  @click="close"-->
-<!--              >-->
-<!--                Cancel-->
-<!--              </button>-->
-<!--              <button-->
-<!--                  class="rounded-xl bg-black px-4 py-2 text-sm text-white hover:opacity-90 active:scale-[0.98]"-->
-<!--                  @click="save"-->
-<!--              >-->
-<!--                Save changes-->
-<!--              </button>-->
-<!--            </div>-->
-<!--          </div>-->
-
-<!--          &lt;!&ndash; Body &ndash;&gt;-->
-<!--          <div class="max-h-[75vh] overflow-auto p-6">-->
-<!--            <div class="grid grid-cols-1 gap-6 lg:grid-cols-3">-->
-<!--              &lt;!&ndash; Left: Test meta &ndash;&gt;-->
-<!--              <div class="lg:col-span-1 space-y-4">-->
-<!--                <div class="rounded-2xl border p-4">-->
-<!--                  <h3 class="mb-3 font-semibold">Test info</h3>-->
-
-<!--                  <label class="block text-sm font-medium text-gray-700"-->
-<!--                  >Test title</label-->
-<!--                  >-->
-<!--                  <input-->
-<!--                      v-model.trim="draft.title"-->
-<!--                      type="text"-->
-<!--                      class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                      placeholder="e.g. Transport from Bayswater"-->
-<!--                  />-->
-
-<!--                  <div class="mt-3 grid grid-cols-2 gap-3">-->
-<!--                    <div>-->
-<!--                      <label class="block text-sm font-medium text-gray-700"-->
-<!--                      >Type</label-->
-<!--                      >-->
-<!--                      <select-->
-<!--                          v-model="draft.type"-->
-<!--                          class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                      >-->
-<!--                        <option value="reading">Reading</option>-->
-<!--                        <option value="listening">Listening</option>-->
-<!--                        <option value="writing">Writing</option>-->
-<!--                      </select>-->
-<!--                    </div>-->
-
-<!--                    <div>-->
-<!--                      <label class="block text-sm font-medium text-gray-700"-->
-<!--                      >Section</label-->
-<!--                      >-->
-<!--                      <select-->
-<!--                          v-model.number="draft.section"-->
-<!--                          class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                      >-->
-<!--                        <option :value="1">Section 1</option>-->
-<!--                        <option :value="2">Section 2</option>-->
-<!--                        <option :value="3">Section 3</option>-->
-<!--                        <option :value="4">Section 4</option>-->
-<!--                      </select>-->
-<!--                    </div>-->
-<!--                  </div>-->
-
-<!--                  <div class="mt-3">-->
-<!--                    <label class="block text-sm font-medium text-gray-700"-->
-<!--                    >Question range (optional)</label-->
-<!--                    >-->
-<!--                    <input-->
-<!--                        v-model.trim="draft.questionRange"-->
-<!--                        type="text"-->
-<!--                        class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                        placeholder="e.g. Questions 1–10"-->
-<!--                    />-->
-<!--                  </div>-->
-
-<!--                  <div class="mt-3">-->
-<!--                    <label class="block text-sm font-medium text-gray-700"-->
-<!--                    >Instruction (optional)</label-->
-<!--                    >-->
-<!--                    <textarea-->
-<!--                        v-model="draft.instruction"-->
-<!--                        rows="4"-->
-<!--                        class="mt-1 w-full resize-none rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                        placeholder='e.g. Complete the notes below. Write no more than two words and/or a number...'-->
-<!--                    />-->
-<!--                  </div>-->
-
-<!--                  <div class="mt-4 flex items-center justify-between gap-3">-->
-<!--                    <div class="text-xs text-gray-500">-->
-<!--                      Test ID: <span class="font-mono">{{ draft.id }}</span>-->
-<!--                    </div>-->
-<!--                    <button-->
-<!--                        class="text-xs rounded-xl border px-3 py-2 hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                        @click="addBlock"-->
-<!--                    >-->
-<!--                      + Add block-->
-<!--                    </button>-->
-<!--                  </div>-->
-<!--                </div>-->
-
-<!--                <div class="rounded-2xl border p-4">-->
-<!--                  <h3 class="mb-2 font-semibold">Quick validation</h3>-->
-
-<!--                  <ul class="space-y-1 text-sm">-->
-<!--                    <li class="flex items-center gap-2">-->
-<!--                      <span-->
-<!--                          class="h-2 w-2 rounded-full"-->
-<!--                          :class="draft.title?.length ? 'bg-green-500' : 'bg-red-500'"-->
-<!--                      />-->
-<!--                      Title is required-->
-<!--                    </li>-->
-
-<!--                    <li class="flex items-center gap-2">-->
-<!--                      <span-->
-<!--                          class="h-2 w-2 rounded-full"-->
-<!--                          :class="draft.blocks.length ? 'bg-green-500' : 'bg-red-500'"-->
-<!--                      />-->
-<!--                      At least 1 block-->
-<!--                    </li>-->
-
-<!--                    <li class="flex items-center gap-2">-->
-<!--                      <span-->
-<!--                          class="h-2 w-2 rounded-full"-->
-<!--                          :class="totalQuestions > 0 ? 'bg-green-500' : 'bg-red-500'"-->
-<!--                      />-->
-<!--                      At least 1 question-->
-<!--                    </li>-->
-<!--                  </ul>-->
-
-<!--                  <div class="mt-3 text-xs text-gray-500">-->
-<!--                    Total questions: <span class="font-semibold">{{ totalQuestions }}</span>-->
-<!--                  </div>-->
-<!--                </div>-->
-<!--              </div>-->
-
-<!--              &lt;!&ndash; Right: Blocks + Questions &ndash;&gt;-->
-<!--              <div class="lg:col-span-2 space-y-4">-->
-<!--                <div-->
-<!--                    v-for="(block, bIndex) in draft.blocks"-->
-<!--                    :key="block.id"-->
-<!--                    class="rounded-2xl border p-4"-->
-<!--                >-->
-<!--                  <div class="flex items-center justify-between gap-3">-->
-<!--                    <div>-->
-<!--                      <h3 class="font-semibold">-->
-<!--                        Block {{ bIndex + 1 }}-->
-<!--                        <span class="text-xs text-gray-500">(optional title)</span>-->
-<!--                      </h3>-->
-<!--                      <p class="text-xs text-gray-500">-->
-<!--                        You can split a test into multiple blocks (like IELTS: different tasks inside section).-->
-<!--                      </p>-->
-<!--                    </div>-->
-
-<!--                    <div class="flex items-center gap-2">-->
-<!--                      <button-->
-<!--                          class="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                          @click="addQuestion(bIndex)"-->
-<!--                      >-->
-<!--                        + Add question-->
-<!--                      </button>-->
-
-<!--                      <button-->
-<!--                          class="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                          @click="removeBlock(bIndex)"-->
-<!--                          :disabled="draft.blocks.length === 1"-->
-<!--                          :class="draft.blocks.length === 1 ? 'opacity-50 cursor-not-allowed' : ''"-->
-<!--                      >-->
-<!--                        Remove block-->
-<!--                      </button>-->
-<!--                    </div>-->
-<!--                  </div>-->
-
-<!--                  <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">-->
-<!--                    <div>-->
-<!--                      <label class="block text-sm font-medium text-gray-700">Block title</label>-->
-<!--                      <input-->
-<!--                          v-model.trim="block.title"-->
-<!--                          type="text"-->
-<!--                          class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                          placeholder="e.g. Complete the notes below"-->
-<!--                      />-->
-<!--                    </div>-->
-
-<!--                    <div>-->
-<!--                      <label class="block text-sm font-medium text-gray-700">Block subtitle</label>-->
-<!--                      <input-->
-<!--                          v-model.trim="block.subtitle"-->
-<!--                          type="text"-->
-<!--                          class="mt-1 w-full rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                          placeholder="e.g. Write no more than two words..."-->
-<!--                      />-->
-<!--                    </div>-->
-
-<!--                    <div class="md:col-span-2">-->
-<!--                      <label class="block text-sm font-medium text-gray-700">Block description</label>-->
-<!--                      <textarea-->
-<!--                          v-model="block.description"-->
-<!--                          rows="3"-->
-<!--                          class="mt-1 w-full resize-none rounded-xl border px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                          placeholder="Any extra text shown above questions..."-->
-<!--                      />-->
-<!--                    </div>-->
-<!--                  </div>-->
-
-<!--                  &lt;!&ndash; Questions &ndash;&gt;-->
-<!--                  <div class="mt-4 space-y-3">-->
-<!--                    <div-->
-<!--                        v-for="(q, qIndex) in block.questions"-->
-<!--                        :key="q.id"-->
-<!--                        class="rounded-2xl bg-gray-50 p-4"-->
-<!--                    >-->
-<!--                      <div class="flex items-start justify-between gap-3">-->
-<!--                        <div class="min-w-0">-->
-<!--                          <div class="text-sm font-semibold">-->
-<!--                            Question {{ qIndex + 1 }}-->
-<!--                            <span class="text-xs text-gray-500">({{ q.type }})</span>-->
-<!--                          </div>-->
-<!--                          <div class="text-xs text-gray-500">-->
-<!--                            ID: <span class="font-mono">{{ q.id }}</span>-->
-<!--                          </div>-->
-<!--                        </div>-->
-
-<!--                        <div class="flex items-center gap-2">-->
-<!--                          <select-->
-<!--                              v-model="q.type"-->
-<!--                              class="rounded-xl border bg-white px-3 py-2 text-xs outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                          >-->
-<!--                            <option value="text">Text</option>-->
-<!--                            <option value="mcq">MCQ</option>-->
-<!--                            <option value="matching">Matching</option>-->
-<!--                            <option value="truefalse">True/False/Not Given</option>-->
-<!--                          </select>-->
-
-<!--                          <button-->
-<!--                              class="rounded-xl border px-3 py-2 text-xs hover:bg-white active:scale-[0.98]"-->
-<!--                              @click="removeQuestion(bIndex, qIndex)"-->
-<!--                              :disabled="block.questions.length === 1 && draft.blocks.length === 1"-->
-<!--                              :class="(block.questions.length === 1 && draft.blocks.length === 1) ? 'opacity-50 cursor-not-allowed' : ''"-->
-<!--                          >-->
-<!--                            Remove-->
-<!--                          </button>-->
-<!--                        </div>-->
-<!--                      </div>-->
-
-<!--                      <div class="mt-3 grid grid-cols-1 gap-3 md:grid-cols-2">-->
-<!--                        <div class="md:col-span-2">-->
-<!--                          <label class="block text-sm font-medium text-gray-700">Question</label>-->
-<!--                          <textarea-->
-<!--                              v-model="q.prompt"-->
-<!--                              rows="2"-->
-<!--                              class="mt-1 w-full resize-none rounded-xl border bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                              placeholder="Type the question text..."-->
-<!--                          />-->
-<!--                        </div>-->
-
-<!--                        <div>-->
-<!--                          <label class="block text-sm font-medium text-gray-700">Answer</label>-->
-<!--                          <input-->
-<!--                              v-model.trim="q.answer"-->
-<!--                              type="text"-->
-<!--                              class="mt-1 w-full rounded-xl border bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                              placeholder="Correct answer"-->
-<!--                          />-->
-<!--                        </div>-->
-
-<!--                        <div>-->
-<!--                          <label class="block text-sm font-medium text-gray-700">Points</label>-->
-<!--                          <input-->
-<!--                              v-model.number="q.points"-->
-<!--                              type="number"-->
-<!--                              min="0"-->
-<!--                              class="mt-1 w-full rounded-xl border bg-white px-3 py-2 outline-none focus:ring-2 focus:ring-black/20"-->
-<!--                          />-->
-<!--                        </div>-->
-
-<!--                        &lt;!&ndash; MCQ Options &ndash;&gt;-->
-<!--                        <div v-if="q.type === 'mcq'" class="md:col-span-2">-->
-<!--                          <div class="flex items-center justify-between">-->
-<!--                            <label class="block text-sm font-medium text-gray-700">Options</label>-->
-<!--                            <button-->
-<!--                                class="rounded-xl border bg-white px-3 py-2 text-xs hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                @click="addOption(q)"-->
-<!--                            >-->
-<!--                              + Add option-->
-<!--                            </button>-->
-<!--                          </div>-->
-
-<!--                          <div class="mt-2 grid grid-cols-1 gap-2 md:grid-cols-2">-->
-<!--                            <div-->
-<!--                                v-for="(opt, oi) in q.options"-->
-<!--                                :key="opt.id"-->
-<!--                                class="flex items-center gap-2 rounded-xl border bg-white p-2"-->
-<!--                            >-->
-<!--                              <input-->
-<!--                                  v-model.trim="opt.text"-->
-<!--                                  class="w-full outline-none text-sm"-->
-<!--                                  placeholder="Option text..."-->
-<!--                              />-->
-<!--                              <button-->
-<!--                                  class="text-xs rounded-lg border px-2 py-1 hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                  @click="removeOption(q, oi)"-->
-<!--                                  :disabled="q.options.length <= 2"-->
-<!--                                  :class="q.options.length <= 2 ? 'opacity-50 cursor-not-allowed' : ''"-->
-<!--                              >-->
-<!--                                ✕-->
-<!--                              </button>-->
-<!--                            </div>-->
-<!--                          </div>-->
-
-<!--                          <p class="mt-2 text-xs text-gray-500">-->
-<!--                            Tip: set <b>Answer</b> to exact option text (или можешь хранить key — как тебе удобнее).-->
-<!--                          </p>-->
-<!--                        </div>-->
-
-<!--                        &lt;!&ndash; Matching &ndash;&gt;-->
-<!--                        <div v-if="q.type === 'matching'" class="md:col-span-2">-->
-<!--                          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">-->
-<!--                            <div class="rounded-2xl border bg-white p-3">-->
-<!--                              <div class="flex items-center justify-between">-->
-<!--                                <div class="text-sm font-medium">Items to match</div>-->
-<!--                                <button-->
-<!--                                    class="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                    @click="addPairItem(q, 'items')"-->
-<!--                                >-->
-<!--                                  + Add-->
-<!--                                </button>-->
-<!--                              </div>-->
-
-<!--                              <div class="mt-2 space-y-2">-->
-<!--                                <div-->
-<!--                                    v-for="(it, ii) in q.matching.items"-->
-<!--                                    :key="it.id"-->
-<!--                                    class="flex items-center gap-2 rounded-xl border bg-gray-50 p-2"-->
-<!--                                >-->
-<!--                                  <input-->
-<!--                                      v-model.trim="it.text"-->
-<!--                                      class="w-full bg-transparent outline-none text-sm"-->
-<!--                                      placeholder="Item text..."-->
-<!--                                  />-->
-<!--                                  <button-->
-<!--                                      class="text-xs rounded-lg border bg-white px-2 py-1 hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                      @click="removePairItem(q, 'items', ii)"-->
-<!--                                      :disabled="q.matching.items.length <= 1"-->
-<!--                                      :class="q.matching.items.length <= 1 ? 'opacity-50 cursor-not-allowed' : ''"-->
-<!--                                  >-->
-<!--                                    ✕-->
-<!--                                  </button>-->
-<!--                                </div>-->
-<!--                              </div>-->
-<!--                            </div>-->
-
-<!--                            <div class="rounded-2xl border bg-white p-3">-->
-<!--                              <div class="flex items-center justify-between">-->
-<!--                                <div class="text-sm font-medium">Options to match with</div>-->
-<!--                                <button-->
-<!--                                    class="rounded-xl border px-3 py-2 text-xs hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                    @click="addPairItem(q, 'options')"-->
-<!--                                >-->
-<!--                                  + Add-->
-<!--                                </button>-->
-<!--                              </div>-->
-
-<!--                              <div class="mt-2 space-y-2">-->
-<!--                                <div-->
-<!--                                    v-for="(op, oi) in q.matching.options"-->
-<!--                                    :key="op.id"-->
-<!--                                    class="flex items-center gap-2 rounded-xl border bg-gray-50 p-2"-->
-<!--                                >-->
-<!--                                  <input-->
-<!--                                      v-model.trim="op.text"-->
-<!--                                      class="w-full bg-transparent outline-none text-sm"-->
-<!--                                      placeholder="Option text..."-->
-<!--                                  />-->
-<!--                                  <button-->
-<!--                                      class="text-xs rounded-lg border bg-white px-2 py-1 hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                                      @click="removePairItem(q, 'options', oi)"-->
-<!--                                      :disabled="q.matching.options.length <= 2"-->
-<!--                                      :class="q.matching.options.length <= 2 ? 'opacity-50 cursor-not-allowed' : ''"-->
-<!--                                  >-->
-<!--                                    ✕-->
-<!--                                  </button>-->
-<!--                                </div>-->
-<!--                              </div>-->
-<!--                            </div>-->
-<!--                          </div>-->
-
-<!--                          <p class="mt-2 text-xs text-gray-500">-->
-<!--                            Для matching ты можешь хранить правильные ответы в поле <b>Answer</b>-->
-<!--                            как JSON, например: {"1":"A","2":"C"} — или сделай отдельную структуру, как тебе удобнее.-->
-<!--                          </p>-->
-<!--                        </div>-->
-<!--                      </div>-->
-<!--                    </div>-->
-<!--                  </div>-->
-<!--                </div>-->
-
-<!--                <div v-if="!draft.blocks.length" class="rounded-2xl border p-6 text-center text-gray-500">-->
-<!--                  No blocks yet.-->
-<!--                </div>-->
-<!--              </div>-->
-<!--            </div>-->
-<!--          </div>-->
-
-<!--          &lt;!&ndash; Footer &ndash;&gt;-->
-<!--          <div class="border-t px-6 py-4 flex items-center justify-between">-->
-<!--            <div class="text-xs text-gray-500">-->
-<!--              <span class="font-semibold">Autosafe:</span> we edit a copy, original test won’t change until Save.-->
-<!--            </div>-->
-
-<!--            <div class="flex items-center gap-2">-->
-<!--              <button-->
-<!--                  class="rounded-xl border px-4 py-2 text-sm hover:bg-gray-50 active:scale-[0.98]"-->
-<!--                  @click="resetFromProps"-->
-<!--              >-->
-<!--                Reset-->
-<!--              </button>-->
-<!--              <button-->
-<!--                  class="rounded-xl bg-black px-4 py-2 text-sm text-white hover:opacity-90 active:scale-[0.98]"-->
-<!--                  @click="save"-->
-<!--              >-->
-<!--                Save changes-->
-<!--              </button>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </div>-->
-<!--      </div>-->
-<!--    </transition>-->
-<!--  </teleport>-->
-<!--</template>-->
-
-<!--<script setup>-->
-<!--import { computed, reactive, watch } from "vue";-->
-
-<!--const props = defineProps({-->
-<!--  modelValue: { type: Boolean, default: false },-->
-<!--  // тест который редактируем-->
-<!--  test: {-->
-<!--    type: Object,-->
-<!--    required: true,-->
-<!--    // ожидаем структуру (можешь адаптировать):-->
-<!--    // {-->
-<!--    //   id, title, type, section,-->
-<!--    //   questionRange, instruction,-->
-<!--    //   blocks: [-->
-<!--    //     { id, title, subtitle, description, questions: [{id, type, prompt, answer, points, options, matching}] }-->
-<!--    //   ]-->
-<!--    // }-->
-<!--  },-->
-<!--});-->
-
-<!--const emit = defineEmits(["update:modelValue", "save"]);-->
-
-<!--const uid = () =>-->
-<!--    (crypto?.randomUUID?.() || `id_${Math.random().toString(16).slice(2)}_${Date.now()}`);-->
-
-<!--function deepClone(obj) {-->
-<!--  return JSON.parse(JSON.stringify(obj ?? {}));-->
-<!--}-->
-
-<!--function normalizeTest(t) {-->
-<!--  const base = deepClone(t);-->
-
-<!--  base.id ??= uid();-->
-<!--  base.title ??= "";-->
-<!--  base.type ??= "reading";-->
-<!--  base.section ??= 1;-->
-<!--  base.questionRange ??= "";-->
-<!--  base.instruction ??= "";-->
-
-<!--  if (!Array.isArray(base.blocks) || base.blocks.length === 0) {-->
-<!--    base.blocks = [makeBlock()];-->
-<!--  } else {-->
-<!--    base.blocks = base.blocks.map((b) => normalizeBlock(b));-->
-<!--  }-->
-<!--  return base;-->
-<!--}-->
-
-<!--function makeQuestion() {-->
-<!--  return {-->
-<!--    id: uid(),-->
-<!--    type: "text",-->
-<!--    prompt: "",-->
-<!--    answer: "",-->
-<!--    points: 1,-->
-<!--    options: [-->
-<!--      { id: uid(), text: "" },-->
-<!--      { id: uid(), text: "" },-->
-<!--    ],-->
-<!--    matching: {-->
-<!--      items: [{ id: uid(), text: "" }],-->
-<!--      options: [-->
-<!--        { id: uid(), text: "" },-->
-<!--        { id: uid(), text: "" },-->
-<!--      ],-->
-<!--    },-->
-<!--  };-->
-<!--}-->
-
-<!--function makeBlock() {-->
-<!--  return {-->
-<!--    id: uid(),-->
-<!--    title: "",-->
-<!--    subtitle: "",-->
-<!--    description: "",-->
-<!--    questions: [makeQuestion()],-->
-<!--  };-->
-<!--}-->
-
-<!--function normalizeBlock(b) {-->
-<!--  const nb = deepClone(b);-->
-<!--  nb.id ??= uid();-->
-<!--  nb.title ??= "";-->
-<!--  nb.subtitle ??= "";-->
-<!--  nb.description ??= "";-->
-<!--  if (!Array.isArray(nb.questions) || nb.questions.length === 0) {-->
-<!--    nb.questions = [makeQuestion()];-->
-<!--  } else {-->
-<!--    nb.questions = nb.questions.map((q) => normalizeQuestion(q));-->
-<!--  }-->
-<!--  return nb;-->
-<!--}-->
-
-<!--function normalizeQuestion(q) {-->
-<!--  const nq = deepClone(q);-->
-<!--  nq.id ??= uid();-->
-<!--  nq.type ??= "text";-->
-<!--  nq.prompt ??= "";-->
-<!--  nq.answer ??= "";-->
-<!--  nq.points ??= 1;-->
-
-<!--  if (!Array.isArray(nq.options) || nq.options.length < 2) {-->
-<!--    nq.options = [-->
-<!--      { id: uid(), text: "" },-->
-<!--      { id: uid(), text: "" },-->
-<!--    ];-->
-<!--  } else {-->
-<!--    nq.options = nq.options.map((o) => ({ id: o?.id ?? uid(), text: o?.text ?? "" }));-->
-<!--  }-->
-
-<!--  nq.matching ??= {};-->
-<!--  nq.matching.items ??= [{ id: uid(), text: "" }];-->
-<!--  nq.matching.options ??= [-->
-<!--    { id: uid(), text: "" },-->
-<!--    { id: uid(), text: "" },-->
-<!--  ];-->
-
-<!--  nq.matching.items = nq.matching.items.map((it) => ({ id: it?.id ?? uid(), text: it?.text ?? "" }));-->
-<!--  nq.matching.options = nq.matching.options.map((op) => ({ id: op?.id ?? uid(), text: op?.text ?? "" }));-->
-
-<!--  return nq;-->
-<!--}-->
-
-<!--const draft = reactive(normalizeTest(props.test));-->
-
-<!--function resetFromProps() {-->
-<!--  const fresh = normalizeTest(props.test);-->
-<!--  Object.keys(draft).forEach((k) => delete draft[k]);-->
-<!--  Object.assign(draft, fresh);-->
-<!--}-->
-
-<!--watch(-->
-<!--    () => props.test,-->
-<!--    () => {-->
-<!--      resetFromProps();-->
-<!--    },-->
-<!--    { deep: true }-->
-<!--);-->
-
-<!--watch(-->
-<!--    () => props.modelValue,-->
-<!--    (open) => {-->
-<!--      if (open) resetFromProps();-->
-<!--    }-->
-<!--);-->
-
-<!--const totalQuestions = computed(() =>-->
-<!--    draft.blocks.reduce((sum, b) => sum + (b.questions?.length || 0), 0)-->
-<!--);-->
-
-<!--function close() {-->
-<!--  emit("update:modelValue", false);-->
-<!--}-->
-
-<!--function save() {-->
-<!--  // минимальная валидация-->
-<!--  if (!draft.title?.trim()) return;-->
-<!--  if (!draft.blocks.length) return;-->
-<!--  if (totalQuestions.value <= 0) return;-->
-
-<!--  emit("save", deepClone(draft));-->
-<!--  close();-->
-<!--}-->
-
-<!--function addBlock() {-->
-<!--  draft.blocks.push(makeBlock());-->
-<!--}-->
-
-<!--function removeBlock(index) {-->
-<!--  if (draft.blocks.length === 1) return;-->
-<!--  draft.blocks.splice(index, 1);-->
-<!--}-->
-
-<!--function addQuestion(blockIndex) {-->
-<!--  draft.blocks[blockIndex].questions.push(makeQuestion());-->
-<!--}-->
-
-<!--function removeQuestion(blockIndex, qIndex) {-->
-<!--  const block = draft.blocks[blockIndex];-->
-<!--  const isLastQuestionInAll =-->
-<!--      draft.blocks.length === 1 && block.questions.length === 1;-->
-
-<!--  if (isLastQuestionInAll) return;-->
-<!--  if (block.questions.length === 1 && draft.blocks.length > 1) {-->
-<!--    // если в блоке 1 вопрос и блоков много — удалим блок целиком-->
-<!--    draft.blocks.splice(blockIndex, 1);-->
-<!--    if (!draft.blocks.length) draft.blocks.push(makeBlock());-->
-<!--    return;-->
-<!--  }-->
-<!--  block.questions.splice(qIndex, 1);-->
-<!--}-->
-
-<!--function addOption(q) {-->
-<!--  q.options.push({ id: uid(), text: "" });-->
-<!--}-->
-
-<!--function removeOption(q, index) {-->
-<!--  if (q.options.length <= 2) return;-->
-<!--  q.options.splice(index, 1);-->
-<!--}-->
-
-<!--function addPairItem(q, key) {-->
-<!--  q.matching[key].push({ id: uid(), text: "" });-->
-<!--}-->
-
-<!--function removePairItem(q, key, index) {-->
-<!--  const min = key === "items" ? 1 : 2;-->
-<!--  if (q.matching[key].length <= min) return;-->
-<!--  q.matching[key].splice(index, 1);-->
-<!--}-->
-<!--</script>-->
-
-<!--<style scoped>-->
-<!--.fade-enter-active,-->
-<!--.fade-leave-active {-->
-<!--  transition: opacity 0.2s ease;-->
-<!--}-->
-<!--.fade-enter-from,-->
-<!--.fade-leave-to {-->
-<!--  opacity: 0;-->
-<!--}-->
-<!--</style>-->
-
-<!-- UpdateTestModal.vue -->
-<!-- UpdateTestModal.vue -->
 <template>
   <teleport to="body">
-    <!-- Body -->
-    <div class="p-6 h-[78vh] overflow-y-auto">
-      <!-- ✅ LOADING FULL TEST -->
-      <div v-if="loadingFull" class="space-y-4">
-        <div class="flex items-center gap-3">
-          <div class="h-10 w-10 rounded-xl bg-gray-200 animate-pulse"></div>
-          <div class="flex-1">
-            <div class="h-4 w-56 bg-gray-200 rounded animate-pulse"></div>
-            <div class="h-3 w-40 bg-gray-100 rounded mt-2 animate-pulse"></div>
-          </div>
-        </div>
-
-        <div class="border rounded-2xl p-5 bg-gray-50 space-y-3">
-          <div class="h-4 w-44 bg-gray-200 rounded animate-pulse"></div>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-            <div class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
-          </div>
-          <div class="h-20 bg-gray-200 rounded-xl animate-pulse"></div>
-        </div>
-
-        <div class="border rounded-2xl p-5 bg-white space-y-3">
-          <div class="h-4 w-48 bg-gray-200 rounded animate-pulse"></div>
-          <div class="h-24 bg-gray-100 rounded-xl animate-pulse"></div>
-          <div class="h-24 bg-gray-100 rounded-xl animate-pulse"></div>
-          <div class="h-24 bg-gray-100 rounded-xl animate-pulse"></div>
-        </div>
-
-        <div class="text-center text-sm text-gray-500 pt-2">
-          Loading test data...
-        </div>
-      </div>
-
-      <!-- ✅ REAL FORM (only after load) -->
-      <div v-else>
-        <div v-if="error" class="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200">
-          {{ error }}
-        </div>
-
-        <!-- ✅ ВЕСЬ ТВОЙ СУЩЕСТВУЮЩИЙ КОД ФОРМЫ ОСТАВЬ ТУТ -->
-        <!-- Test meta -->
-        <div class="border rounded-2xl p-5 bg-gray-50">
-          ...
-        </div>
-
-        <!-- Parts / Sections / Questions -->
-        <div class="mt-6 space-y-6">
-          ...
-        </div>
-      </div>
-    </div>
-
     <div class="fixed inset-0 z-[9999] flex items-center justify-center px-4">
       <div class="absolute inset-0 bg-black/50" @click="close" />
 
@@ -751,440 +17,687 @@
 
         <!-- Body -->
         <div class="p-6 h-[78vh] overflow-y-auto">
-          <div v-if="error" class="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200">
-            {{ error }}
-          </div>
-
-          <!-- Test meta -->
-          <div class="border rounded-2xl p-5 bg-gray-50">
-            <h3 class="font-semibold text-gray-900 mb-4">Test Information</h3>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Test Title</label>
-                <input
-                    v-model="local.title"
-                    class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., IELTS Reading Academic Test 1"
-                />
-              </div>
-
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
-                <input
-                    v-model.number="local.duration"
-                    type="number"
-                    class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="60"
-                />
+          <!-- ✅ LOADING FULL TEST -->
+          <div v-if="loadingFull" class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 rounded-xl bg-gray-200 animate-pulse"></div>
+              <div class="flex-1">
+                <div class="h-4 w-56 bg-gray-200 rounded animate-pulse"></div>
+                <div class="h-3 w-40 bg-gray-100 rounded mt-2 animate-pulse"></div>
               </div>
             </div>
 
-            <div class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea
-                  v-model="local.description"
-                  rows="2"
-                  class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Optional"
-              />
+            <div class="border rounded-2xl p-5 bg-gray-50 space-y-3">
+              <div class="h-4 w-44 bg-gray-200 rounded animate-pulse"></div>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+                <div class="h-10 bg-gray-200 rounded-xl animate-pulse"></div>
+              </div>
+              <div class="h-20 bg-gray-200 rounded-xl animate-pulse"></div>
             </div>
 
-            <!-- Listening Audio -->
-            <div v-if="type === 'listening'" class="mt-4">
-              <label class="block text-sm font-medium text-gray-700 mb-1">Audio File</label>
-
-              <div class="flex items-center gap-3">
-                <input
-                    type="file"
-                    accept="audio/*"
-                    class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                    @change="handleAudioUpload"
-                />
-                <span v-if="audioFile" class="text-xs text-green-700">New: {{ audioFile.name }}</span>
-                <span v-else-if="local.audio_url" class="text-xs text-gray-500">Current audio exists</span>
-                <span v-else class="text-xs text-gray-400">No audio uploaded</span>
-              </div>
+            <div class="text-center text-sm text-gray-500 pt-2">
+              Loading test data...
             </div>
           </div>
 
-          <!-- Parts / Sections / Questions -->
-          <div class="mt-6 space-y-6">
-            <div class="flex items-center justify-between">
-              <h3 class="text-lg font-semibold">Parts & Sections</h3>
-              <button class="text-sm text-blue-600 hover:text-blue-800" @click="addPart">+ Add Part</button>
+          <!-- ✅ REAL FORM -->
+          <div v-else>
+            <div v-if="error" class="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200">
+              {{ error }}
             </div>
 
-            <div
-                v-for="(part, partIndex) in local.parts"
-                :key="part._key"
-                class="border rounded-2xl p-5 bg-white"
-            >
-              <!-- Part header -->
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center gap-2">
-                  <div class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-semibold">
-                    {{ partIndex + 1 }}
-                  </div>
-                  <div>
-                    <div class="font-semibold text-gray-900">Part {{ partIndex + 1 }}</div>
-                    <div class="text-xs text-gray-500">
-                      {{ part.sections.length }} section{{ part.sections.length !== 1 ? "s" : "" }}
-                    </div>
-                  </div>
+            <!-- Test meta -->
+            <div class="border rounded-2xl p-5 bg-gray-50">
+              <h3 class="font-semibold text-gray-900 mb-4">Test Information</h3>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Test Title</label>
+                  <input
+                      v-model="local.title"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., IELTS Reading Academic Test 1"
+                  />
                 </div>
 
-                <div class="flex items-center gap-2">
-                  <button class="text-sm text-blue-600 hover:text-blue-800" @click="addSection(partIndex)">
-                    + Add Section
-                  </button>
-                  <button
-                      v-if="local.parts.length > 1"
-                      class="text-sm text-red-600 hover:text-red-800"
-                      @click="removePart(partIndex)"
-                  >
-                    Remove Part
-                  </button>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Duration (minutes)</label>
+                  <input
+                      v-model.number="local.duration"
+                      type="number"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="60"
+                  />
                 </div>
               </div>
 
-              <!-- Part description -->
-              <div class="mb-5">
-                <label class="block text-sm font-medium text-gray-700 mb-1">Part Description (Optional)</label>
+              <div class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
                 <textarea
-                    v-model="part.description"
+                    v-model="local.description"
                     rows="2"
                     class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="e.g., You will hear a conversation..."
+                    placeholder="Optional"
                 />
               </div>
 
-              <!-- Sections -->
-              <div class="space-y-6">
-                <div
-                    v-for="(section, sectionIndex) in part.sections"
-                    :key="section._key"
-                    class="border-l-4 border-blue-400 bg-blue-50/30 rounded-2xl p-4"
-                >
-                  <!-- Section header -->
-                  <div class="flex items-center justify-between mb-3">
-                    <div class="flex items-center gap-2">
-                      <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs">
-                        {{ sectionIndex + 1 }}
+              <!-- Listening Audio -->
+              <div v-if="type === 'listening'" class="mt-4">
+                <label class="block text-sm font-medium text-gray-700 mb-1">Audio File</label>
+
+                <div class="flex items-center gap-3">
+                  <input
+                      type="file"
+                      accept="audio/*"
+                      class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-xl file:border-0 file:text-sm file:font-medium file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                      @change="handleAudioUpload"
+                  />
+                  <span v-if="audioFile" class="text-xs text-green-700">New: {{ audioFile.name }}</span>
+                  <span v-else-if="local.audio_url" class="text-xs text-gray-500">Current audio exists</span>
+                  <span v-else class="text-xs text-gray-400">No audio uploaded</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- ✅ WRITING UI -->
+            <div v-if="type === 'writing'" class="mt-6 space-y-6">
+              <!-- Task 1 -->
+              <div class="border-2 border-blue-200 rounded-2xl p-5 bg-blue-50">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-9 h-9 bg-blue-600 text-white rounded-xl flex items-center justify-center font-semibold">1</div>
+                  <div>
+                    <div class="font-semibold text-blue-900">Writing Task 1</div>
+                    <div class="text-xs text-blue-700/70">Chart / Diagram description</div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                  <input
+                      v-model="local.tasks.task1.title"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., The chart below shows..."
+                  />
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task Question</label>
+                  <textarea
+                      v-model="local.tasks.task1.question"
+                      rows="4"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Summarise the information..."
+                  />
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task 1 Image</label>
+                  <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 bg-white">
+                    <div v-if="task1ImagePreview" class="mb-3">
+                      <img :src="task1ImagePreview" class="max-h-56 mx-auto rounded-xl" alt="preview" />
+                      <div class="text-xs text-gray-500 mt-2 text-center">
+                        {{ task1ImageFile ? "New image selected" : "Current image exists" }}
                       </div>
-                      <div class="font-semibold text-gray-900">Section {{ sectionIndex + 1 }}</div>
+                    </div>
+                    <div v-else class="text-center py-5">
+                      <div class="text-4xl text-gray-300 mb-2">📊</div>
+                      <div class="text-sm text-gray-500">No image</div>
                     </div>
 
-                    <button
-                        v-if="part.sections.length > 1"
-                        class="text-sm text-red-600 hover:text-red-800"
-                        @click="removeSection(partIndex, sectionIndex)"
+                    <div class="mt-3 flex items-center justify-center gap-2">
+                      <label class="inline-flex items-center px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <input type="file" accept="image/*" class="hidden" @change="handleTask1ImageUpload" />
+                        {{ task1ImagePreview ? "Change Image" : "Upload Image" }}
+                      </label>
+
+                      <button
+                          v-if="task1ImagePreview"
+                          class="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                          @click="removeTask1Image"
+                          type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Words</label>
+                    <input
+                        v-model.number="local.tasks.task1.minWords"
+                        type="number"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Recommended Time</label>
+                    <input
+                        v-model.number="local.tasks.task1.recommendedTime"
+                        type="number"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <!-- Task 2 -->
+              <div class="border-2 border-green-200 rounded-2xl p-5 bg-green-50">
+                <div class="flex items-center gap-3 mb-4">
+                  <div class="w-9 h-9 bg-green-600 text-white rounded-xl flex items-center justify-center font-semibold">2</div>
+                  <div>
+                    <div class="font-semibold text-green-900">Writing Task 2</div>
+                    <div class="text-xs text-green-700/70">Essay</div>
+                  </div>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task Title</label>
+                  <input
+                      v-model="local.tasks.task2.title"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="e.g., Some people believe that..."
+                  />
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task Question</label>
+                  <textarea
+                      v-model="local.tasks.task2.question"
+                      rows="4"
+                      class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="To what extent do you agree or disagree?"
+                  />
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-sm font-medium text-gray-700 mb-1">Task 2 Image (optional)</label>
+                  <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 bg-white">
+                    <div v-if="task2ImagePreview" class="mb-3">
+                      <img :src="task2ImagePreview" class="max-h-56 mx-auto rounded-xl" alt="preview" />
+                      <div class="text-xs text-gray-500 mt-2 text-center">
+                        {{ task2ImageFile ? "New image selected" : "Current image exists" }}
+                      </div>
+                    </div>
+                    <div v-else class="text-center py-5">
+                      <div class="text-4xl text-gray-300 mb-2">📝</div>
+                      <div class="text-sm text-gray-500">No image</div>
+                    </div>
+
+                    <div class="mt-3 flex items-center justify-center gap-2">
+                      <label class="inline-flex items-center px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                        <input type="file" accept="image/*" class="hidden" @change="handleTask2ImageUpload" />
+                        {{ task2ImagePreview ? "Change Image" : "Upload Image" }}
+                      </label>
+
+                      <button
+                          v-if="task2ImagePreview"
+                          class="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                          @click="removeTask2Image"
+                          type="button"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Minimum Words</label>
+                    <input
+                        v-model.number="local.tasks.task2.minWords"
+                        type="number"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Recommended Time</label>
+                    <input
+                        v-model.number="local.tasks.task2.recommendedTime"
+                        type="number"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Essay Type</label>
+                    <select
+                        v-model="local.tasks.task2.essayType"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      Remove
-                    </button>
+                      <option value="opinion">Opinion</option>
+                      <option value="discussion">Discussion</option>
+                      <option value="solution">Problem-Solution</option>
+                      <option value="advantage">Advantage-Disadvantage</option>
+                      <option value="two-part">Two-part</option>
+                    </select>
                   </div>
+                </div>
+              </div>
+            </div>
 
-                  <!-- Section Title / Instruction -->
-                  <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Section Title / Instruction</label>
-                    <textarea
-                        v-model="section.title"
-                        rows="2"
-                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., Questions 1–10 Complete the notes below..."
-                    />
-                  </div>
+            <!-- ✅ LISTENING/READING UI -->
+            <div v-else class="mt-6">
+              <!-- Part Navigation Header -->
+              <div class="flex items-center justify-between mb-6">
+                <h3 class="text-lg font-semibold">Parts & Sections</h3>
+                <div class="flex items-center gap-2">
+                  <button
+                      class="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 disabled:cursor-not-allowed"
+                      :disabled="local.parts.length >= 4"
+                      @click="addPart"
+                  >
+                    + Add Part
+                  </button>
+                  <span class="text-gray-400 mx-2">|</span>
+                  <span class="text-sm text-gray-600">
+                    Part {{ currentPartIndex + 1 }} of {{ local.parts.length }}
+                  </span>
+                </div>
+              </div>
 
-                  <!-- Section Content / Context -->
-                  <div class="mb-3">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Section Content / Context</label>
-                    <textarea
-                        v-model="section.content"
-                        rows="3"
-                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                        placeholder="e.g., Read the passage / Listen to a conversation..."
-                    />
-                  </div>
+              <!-- Part Navigation Buttons -->
+              <div class="flex items-center justify-between mb-4">
+                <button
+                    :disabled="currentPartIndex === 0"
+                    @click="prevPart"
+                    class="flex items-center gap-2 px-4 py-2 border rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+                  </svg>
+                  Previous Part
+                </button>
 
-                  <!-- Section Image -->
-                  <div class="mb-4" v-if="type == 'listening'">
-                    <label class="block text-sm font-medium text-gray-700 mb-1">
-                      Section Image (Optional) <span class="text-xs text-gray-500">— diagram/map/chart</span>
-                    </label>
+                <button
+                    :disabled="currentPartIndex === local.parts.length - 1"
+                    @click="nextPart"
+                    class="flex items-center gap-2 px-4 py-2 border rounded-xl disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+                >
+                  Next Part
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                  </svg>
+                </button>
+              </div>
 
-                    <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 bg-white">
-                      <div v-if="section.imagePreview" class="mb-3">
-                        <img :src="section.imagePreview" class="max-h-56 mx-auto rounded-xl" alt="preview" />
-                        <div class="text-xs text-gray-500 mt-2 text-center">
-                          {{ section.imageFile ? "New image selected" : "Current image exists" }}
+              <!-- Current Part Display -->
+              <div
+                  v-if="currentPartIndex < local.parts.length"
+                  class="border rounded-2xl p-5 bg-white"
+              >
+                <!-- Get current part data -->
+                <template v-if="currentPart">
+                  <!-- Part header -->
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center gap-2">
+                      <div class="w-8 h-8 rounded-xl bg-gray-100 flex items-center justify-center text-sm font-semibold">
+                        {{ currentPartIndex + 1 }}
+                      </div>
+                      <div>
+                        <div class="font-semibold text-gray-900">Part {{ currentPartIndex + 1 }}</div>
+                        <div class="text-xs text-gray-500">
+                          {{ currentPart.sections.length }} section{{ currentPart.sections.length !== 1 ? "s" : "" }}
                         </div>
                       </div>
-                      <div v-else class="text-center py-5">
-                        <div class="text-4xl text-gray-300 mb-2">🖼️</div>
-                        <div class="text-sm text-gray-500">No image</div>
-                      </div>
-
-                      <div class="mt-3 flex items-center justify-center gap-2">
-                        <label
-                            class="inline-flex items-center px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer"
-                        >
-                          <input
-                              type="file"
-                              accept="image/*"
-                              class="hidden"
-                              @change="(e) => handleSectionImageUpload(e, partIndex, sectionIndex)"
-                          />
-                          {{ section.imagePreview ? "Change Image" : "Upload Image" }}
-                        </label>
-                        <button
-                            v-if="section.imagePreview"
-                            class="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 text-sm"
-                            @click="removeSectionImage(partIndex, sectionIndex)"
-                        >
-                          Remove
-                        </button>
-                      </div>
                     </div>
-                  </div>
 
-                  <!-- Question Type -->
-                  <div class="mb-4">
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Question Type for this Section</label>
-                    <div class="flex flex-wrap gap-2">
+                    <div class="flex items-center gap-2">
+                      <button class="text-sm text-blue-600 hover:text-blue-800" @click="addSection(currentPartIndex)">
+                        + Add Section
+                      </button>
                       <button
-                          v-for="qt in questionTypes"
-                          :key="qt.id"
-                          type="button"
-                          class="px-3 py-2 text-sm border rounded-xl transition"
-                          :class="section.questionType === qt.id
-                          ? 'bg-blue-600 text-white border-blue-600'
-                          : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'"
-                          @click="setSectionQuestionType(partIndex, sectionIndex, qt.id)"
+                          v-if="local.parts.length > 1"
+                          class="text-sm text-red-600 hover:text-red-800"
+                          @click="removePart(currentPartIndex)"
                       >
-                        {{ qt.name }}
+                        Remove Part
                       </button>
                     </div>
                   </div>
 
-                  <!-- Questions -->
-                  <div class="space-y-3">
+                  <!-- Part description -->
+                  <div class="mb-5">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Part Description (Optional)</label>
+                    <textarea
+                        v-model="currentPart.description"
+                        rows="2"
+                        class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="e.g., You will hear a conversation..."
+                    />
+                  </div>
+
+                  <!-- Sections -->
+                  <div class="space-y-6">
                     <div
-                        v-for="(question, qIndex) in section.questions"
-                        :key="question._key"
-                        class="border border-gray-200 bg-white rounded-2xl p-4"
+                        v-for="(section, sectionIndex) in currentPart.sections"
+                        :key="section._key"
+                        class="border-l-4 border-blue-400 bg-blue-50/30 rounded-2xl p-4"
                     >
-                      <div class="flex items-center justify-between mb-2">
-                        <div class="font-medium text-gray-800">Question {{ qIndex + 1 }}</div>
+                      <!-- Section header -->
+                      <div class="flex items-center justify-between mb-3">
+                        <div class="flex items-center gap-2">
+                          <div class="w-7 h-7 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center text-xs">
+                            {{ getGlobalSectionNumber(currentPartIndex, sectionIndex) }}
+                          </div>
+                          <div class="font-semibold text-gray-900">
+                            Section {{ getGlobalSectionNumber(currentPartIndex, sectionIndex) }}
+                          </div>
+                        </div>
+
                         <button
-                            v-if="section.questions.length > 1"
+                            v-if="currentPart.sections.length > 1"
                             class="text-sm text-red-600 hover:text-red-800"
-                            @click="removeQuestion(partIndex, sectionIndex, qIndex)"
+                            @click="removeSection(currentPartIndex, sectionIndex)"
                         >
                           Remove
                         </button>
                       </div>
 
-                      <!-- Question Text -->
+                      <!-- Section Title / Instruction -->
                       <div class="mb-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
-                        <input
-                            v-model="question.text"
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section Title / Instruction</label>
+                        <textarea
+                            v-model="section.title"
+                            rows="2"
                             class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            :placeholder="section.questionType === 'note_completion'
-                            ? 'Use {{1}}, {{2}} for blanks'
-                            : getQuestionPlaceholder(section.questionType, qIndex)"
+                            placeholder="e.g., Questions 1–10 Complete the notes below..."
                         />
                       </div>
 
-                      <!-- Note Completion Answers -->
-                      <div v-if="section.questionType === 'note_completion'" class="mb-2">
-                        <div class="flex items-center justify-between">
-                          <label class="block text-sm font-medium text-gray-700">
-                            Correct Answers (for {{1}}, {{2}} ...)
-                          </label>
-                          <button class="text-sm text-blue-600 hover:text-blue-800" type="button" @click="addBlank(question)">
-                            + Add Answer
-                          </button>
-                        </div>
+                      <!-- Section Content / Context -->
+                      <div class="mb-3">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Section Content / Context</label>
+                        <textarea
+                            v-model="section.content"
+                            rows="3"
+                            class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            placeholder="e.g., Read the passage / Listen to a conversation..."
+                        />
+                      </div>
 
-                        <div class="mt-2 space-y-2">
-                          <div v-for="(ans, ansIndex) in question.answers" :key="ansIndex" class="flex items-center gap-2">
-                            <div class="w-20 text-xs text-gray-500">
-                              &#123;&#123;{{ ansIndex + 1 }}&#125;&#125;
+                      <!-- Section Image (listening only if you want) -->
+                      <div class="mb-4" v-if="type === 'listening'">
+                        <label class="block text-sm font-medium text-gray-700 mb-1">
+                          Section Image (Optional) <span class="text-xs text-gray-500">— diagram/map/chart</span>
+                        </label>
+
+                        <div class="border-2 border-dashed border-gray-200 rounded-2xl p-4 bg-white">
+                          <div v-if="section.imagePreview" class="mb-3">
+                            <img :src="section.imagePreview" class="max-h-56 mx-auto rounded-xl" alt="preview" />
+                            <div class="text-xs text-gray-500 mt-2 text-center">
+                              {{ section.imageFile ? "New image selected" : "Current image exists" }}
                             </div>
-                            <input
-                                v-model="question.answers[ansIndex]"
-                                class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                placeholder="Enter correct word/number"
-                            />
+                          </div>
+                          <div v-else class="text-center py-5">
+                            <div class="text-4xl text-gray-300 mb-2">🖼️</div>
+                            <div class="text-sm text-gray-500">No image</div>
+                          </div>
+
+                          <div class="mt-3 flex items-center justify-center gap-2">
+                            <label class="inline-flex items-center px-4 py-2 bg-white border rounded-xl text-sm font-medium text-gray-700 hover:bg-gray-50 cursor-pointer">
+                              <input type="file" accept="image/*" class="hidden" @change="(e) => handleSectionImageUpload(e, currentPartIndex, sectionIndex)" />
+                              {{ section.imagePreview ? "Change Image" : "Upload Image" }}
+                            </label>
                             <button
-                                v-if="question.answers.length > 1"
+                                v-if="section.imagePreview"
+                                class="px-4 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200 text-sm"
+                                @click="removeSectionImage(currentPartIndex, sectionIndex)"
                                 type="button"
-                                class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
-                                @click="removeBlank(question, ansIndex)"
                             >
-                              &times;
+                              Remove
                             </button>
                           </div>
                         </div>
                       </div>
 
-                      <!-- Multiple Choice -->
-                      <div v-if="section.questionType === 'multiple_choice'" class="space-y-2">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
-
-                        <div
-                            v-for="(opt, optIndex) in question.options"
-                            :key="opt._key"
-                            class="flex items-center gap-3"
-                        >
-                          <div class="flex items-center">
-                            <input
-                                type="radio"
-                                v-model="question.correctOption"
-                                :value="opt.id"
-                                class="h-4 w-4 text-blue-600 focus:ring-blue-500"
-                            />
-                            <span class="ml-2 text-gray-700">{{ String.fromCharCode(65 + optIndex) }}.</span>
-                          </div>
-
-                          <input
-                              v-model="opt.text"
-                              class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                              :placeholder="`Option ${String.fromCharCode(65 + optIndex)}`"
-                          />
-
+                      <!-- Question Type -->
+                      <div class="mb-4">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Question Type for this Section</label>
+                        <div class="flex flex-wrap gap-2">
                           <button
-                              v-if="question.options.length > 2"
+                              v-for="qt in questionTypes"
+                              :key="qt.id"
                               type="button"
-                              class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
-                              @click="removeOption(partIndex, sectionIndex, qIndex, optIndex)"
+                              class="px-3 py-2 text-sm border rounded-xl transition"
+                              :class="section.questionType === qt.id
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-white text-gray-700 border-gray-200 hover:border-gray-300'"
+                              @click="setSectionQuestionType(currentPartIndex, sectionIndex, qt.id)"
                           >
-                            &times;
+                            {{ qt.name }}
                           </button>
                         </div>
+                      </div>
 
-                        <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addOption(partIndex, sectionIndex, qIndex)">
-                          + Add Option
+                      <!-- ✅ NON-MATCHING QUESTIONS -->
+                      <div v-if="section.questionType !== 'matching'" class="space-y-3">
+                        <div
+                            v-for="(question, qIndex) in section.questions"
+                            :key="question._key"
+                            class="border border-gray-200 bg-white rounded-2xl p-4"
+                        >
+                          <div class="flex items-center justify-between mb-2">
+                            <div class="font-medium text-gray-800">
+                              Question {{ getGlobalQuestionNumber(currentPartIndex, sectionIndex, qIndex) }}
+                            </div>
+                            <button
+                                v-if="section.questions.length > 1"
+                                class="text-sm text-red-600 hover:text-red-800"
+                                @click="removeQuestion(currentPartIndex, sectionIndex, qIndex)"
+                                type="button"
+                            >
+                              Remove
+                            </button>
+                          </div>
+
+                          <div class="mb-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Question Text</label>
+                            <input
+                                v-model="question.text"
+                                class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                :placeholder="section.questionType === 'note_completion'
+                                ? 'Use {{1}}, {{2}} for blanks'
+                                : getQuestionPlaceholder(section.questionType, qIndex)"
+                            />
+                          </div>
+
+                          <!-- Note Completion -->
+                          <div v-if="section.questionType === 'note_completion'" class="mb-2">
+                            <div class="flex items-center justify-between">
+                              <label class="block text-sm font-medium text-gray-700">Correct Answers (for {{1}}, {{2}} ...)</label>
+                              <button class="text-sm text-blue-600 hover:text-blue-800" type="button" @click="addBlank(question)">
+                                + Add Answer
+                              </button>
+                            </div>
+
+                            <div class="mt-2 space-y-2">
+                              <div v-for="(ans, ansIndex) in question.answers" :key="ansIndex" class="flex items-center gap-2">
+                                <div class="w-20 text-xs text-gray-500">&#123;&#123;{{ ansIndex + 1 }}&#125;&#125;</div>
+                                <input
+                                    v-model="question.answers[ansIndex]"
+                                    class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                    placeholder="Enter correct word/number"
+                                />
+                                <button
+                                    v-if="question.answers.length > 1"
+                                    type="button"
+                                    class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
+                                    @click="removeBlank(question, ansIndex)"
+                                >
+                                  &times;
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+
+                          <!-- Multiple Choice -->
+                          <div v-if="section.questionType === 'multiple_choice'" class="space-y-2">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Options</label>
+
+                            <div v-for="(opt, optIndex) in question.options" :key="opt._key" class="flex items-center gap-3">
+                              <div class="flex items-center">
+                                <input type="radio" v-model="question.correctOption" :value="opt.id" class="h-4 w-4 text-blue-600 focus:ring-blue-500" />
+                                <span class="ml-2 text-gray-700">{{ String.fromCharCode(65 + optIndex) }}.</span>
+                              </div>
+
+                              <input
+                                  v-model="opt.text"
+                                  class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                  :placeholder="`Option ${String.fromCharCode(65 + optIndex)}`"
+                              />
+
+                              <button
+                                  v-if="question.options.length > 2"
+                                  type="button"
+                                  class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
+                                  @click="removeOption(currentPartIndex, sectionIndex, qIndex, optIndex)"
+                              >
+                                &times;
+                              </button>
+                            </div>
+
+                            <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addOption(currentPartIndex, sectionIndex, qIndex)">
+                              + Add Option
+                            </button>
+                          </div>
+
+                          <!-- Sentence completion -->
+                          <div v-if="section.questionType === 'sentence_completion'" class="mt-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
+                            <input v-model="question.answer" class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          </div>
+
+                          <!-- Short answer -->
+                          <div v-if="section.questionType === 'short_answer'" class="mt-3">
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
+                            <input v-model="question.answer" class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500" />
+                          </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            class="w-full py-2 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:text-gray-800 hover:border-gray-400 transition"
+                            @click="addQuestion(currentPartIndex, sectionIndex)"
+                        >
+                          + Add Question
                         </button>
                       </div>
 
-                      <!-- Matching -->
-                      <div v-if="section.questionType === 'matching'" class="space-y-3">
-                        <label class="block text-sm font-medium text-gray-700">Matching Pairs</label>
+                      <!-- ✅ MATCHING (SECTION LEVEL) -->
+                      <div v-else class="space-y-6">
+                        <div class="flex items-center justify-between">
+                          <label class="block text-sm font-medium text-gray-700">
+                            Matching (one set of options for the whole section)
+                          </label>
+                          <span class="text-xs text-gray-500">Each question is an item</span>
+                        </div>
 
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <!-- Items -->
-                          <div class="bg-white rounded-2xl border p-3">
-                            <div class="flex items-center justify-between mb-2">
-                              <label class="text-sm font-medium text-gray-700">Items</label>
-                              <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addMatchingItem(partIndex, sectionIndex, qIndex)">
-                                + Add Item
-                              </button>
-                            </div>
-
-                            <div v-for="(it, itemIndex) in question.matchingItems" :key="it._key" class="mb-2">
-                              <div class="flex items-center gap-2">
-                                <input
-                                    v-model="it.name"
-                                    class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    :placeholder="`Item ${itemIndex + 1}`"
-                                />
-
-                                <!-- ✅ IMPORTANT: teacher selects correct option for each item -->
-                                <select
-                                    v-model="it.matchedOption"
-                                    class="px-3 py-2 border rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                >
-                                  <option :value="null">Select option</option>
-                                  <option
-                                      v-for="(op, opIndex) in question.matchingOptions"
-                                      :key="op._key"
-                                      :value="op.id"
-                                  >
-                                    {{ opIndex + 1 }}. {{ op.text || "—" }}
-                                  </option>
-                                </select>
-
-                                <button
-                                    type="button"
-                                    class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
-                                    @click="removeMatchingItem(partIndex, sectionIndex, qIndex, itemIndex)"
-                                >
-                                  &times;
-                                </button>
-                              </div>
-                            </div>
+                        <!-- Options -->
+                        <div class="border rounded-2xl p-4 bg-white">
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="font-semibold text-gray-800">Options (A, B, C ...)</div>
+                            <button
+                                type="button"
+                                @click="addMatchingOption(currentPartIndex, sectionIndex)"
+                                class="text-sm text-blue-600 hover:text-blue-800"
+                            >
+                              + Add Option
+                            </button>
                           </div>
 
-                          <!-- Options -->
-                          <div class="bg-white rounded-2xl border p-3">
-                            <div class="flex items-center justify-between mb-2">
-                              <label class="text-sm font-medium text-gray-700">Options</label>
-                              <button type="button" class="text-sm text-blue-600 hover:text-blue-800" @click="addMatchingOption(partIndex, sectionIndex, qIndex)">
-                                + Add Option
-                              </button>
-                            </div>
+                          <div v-if="!(section.matchingOptions?.length)" class="text-sm text-gray-500">
+                            Add at least 2 options.
+                          </div>
 
-                            <div v-for="(op, optIndex) in question.matchingOptions" :key="op._key" class="mb-2">
-                              <div class="flex items-center gap-2">
-                                <div class="w-8 text-xs text-gray-500">{{ optIndex + 1 }}.</div>
-                                <input
-                                    v-model="op.text"
-                                    class="flex-1 px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    :placeholder="`Option ${optIndex + 1}`"
-                                />
-                                <button
-                                    v-if="question.matchingOptions.length > 2"
-                                    type="button"
-                                    class="px-3 py-2 rounded-xl bg-red-100 text-red-700 hover:bg-red-200"
-                                    @click="removeMatchingOption(partIndex, sectionIndex, qIndex, optIndex)"
-                                >
-                                  &times;
-                                </button>
-                              </div>
-                            </div>
+                          <div v-for="(op, optIndex) in (section.matchingOptions || [])" :key="op._key" class="flex items-center gap-2 mb-2">
+                            <span class="w-8 text-sm font-bold text-gray-700">
+                              {{ String.fromCharCode(65 + optIndex) }}.
+                            </span>
+
+                            <input
+                                v-model="op.text"
+                                type="text"
+                                class="flex-1 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                                :placeholder="`Option ${String.fromCharCode(65 + optIndex)}`"
+                            />
+
+                            <button
+                                v-if="(section.matchingOptions || []).length > 2"
+                                type="button"
+                                @click="removeMatchingOption(currentPartIndex, sectionIndex, optIndex)"
+                                class="text-red-500 hover:text-red-700 text-lg"
+                            >
+                              &times;
+                            </button>
                           </div>
                         </div>
 
-                        <p class="text-xs text-gray-500">
-                          Tip: For each Item choose the correct Option. Otherwise <b>correct_option_id</b> will be NULL.
-                        </p>
+                        <!-- Items (Questions) -->
+                        <div class="border rounded-2xl p-4 bg-gray-50">
+                          <div class="flex items-center justify-between mb-3">
+                            <div class="font-semibold text-gray-800">Items</div>
+                            <span class="text-xs text-gray-500">Select correct letter for each question</span>
+                          </div>
+
+                          <div class="space-y-3">
+                            <div
+                                v-for="(question, qIndex) in section.questions"
+                                :key="question._key"
+                                class="border border-gray-200 rounded-2xl p-4 bg-white"
+                            >
+                              <div class="flex justify-between items-center mb-2">
+                                <span class="font-medium text-gray-700">
+                                  Question {{ getGlobalQuestionNumber(currentPartIndex, sectionIndex, qIndex) }}
+                                </span>
+                                <button
+                                    v-if="section.questions.length > 1"
+                                    @click="removeQuestion(currentPartIndex, sectionIndex, qIndex)"
+                                    class="text-red-500 hover:text-red-700 text-sm"
+                                    type="button"
+                                >
+                                  Remove
+                                </button>
+                              </div>
+
+                              <input
+                                  v-model="question.text"
+                                  type="text"
+                                  class="w-full mb-3 px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500"
+                                  placeholder="e.g., Merrivales / The Lobster Pot / Elliots..."
+                              />
+
+                              <select v-model="question.matchedOption" class="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500">
+                                <option disabled value="">Select correct option letter</option>
+                                <option
+                                    v-for="(op, optIndex) in (section.matchingOptions || [])"
+                                    :key="op._key"
+                                    :value="String.fromCharCode(65 + optIndex)"
+                                >
+                                  {{ String.fromCharCode(65 + optIndex) }}. {{ op.text }}
+                                </option>
+                              </select>
+                            </div>
+                          </div>
+
+                          <button
+                              type="button"
+                              @click="addQuestion(currentPartIndex, sectionIndex)"
+                              class="w-full mt-4 py-2 border-2 border-dashed border-gray-300 rounded-xl text-gray-600 hover:text-gray-800 hover:border-gray-400 transition-colors"
+                          >
+                            + Add Question
+                          </button>
+                        </div>
                       </div>
 
-                      <!-- Sentence completion -->
-                      <div v-if="section.questionType === 'sentence_completion'" class="mt-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
-                        <input
-                            v-model="question.answer"
-                            class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter missing words"
-                        />
-                      </div>
-
-                      <!-- Short answer -->
-                      <div v-if="section.questionType === 'short_answer'" class="mt-3">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Correct Answer</label>
-                        <input
-                            v-model="question.answer"
-                            class="w-full px-3 py-2 border rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500"
-                            placeholder="Enter short answer"
-                        />
-                      </div>
                     </div>
-
-                    <!-- Add question -->
-                    <button
-                        type="button"
-                        class="w-full py-2 border-2 border-dashed border-gray-300 rounded-2xl text-gray-600 hover:text-gray-800 hover:border-gray-400 transition"
-                        @click="addQuestion(partIndex, sectionIndex)"
-                    >
-                      + Add Question
-                    </button>
                   </div>
-                </div>
+                </template>
               </div>
             </div>
+
           </div>
         </div>
 
@@ -1202,14 +715,16 @@
             Cancel
           </button>
         </div>
+
       </div>
     </div>
   </teleport>
 </template>
 
 <script setup>
-import { reactive, ref, watch, onMounted } from "vue";
-import { testService } from "@/service/testService.js";
+import { reactive, ref, watch, onMounted, computed } from "vue";
+import { testService } from "@/service/testService.ts";
+
 const loadingFull = ref(true);
 
 const props = defineProps({
@@ -1222,6 +737,12 @@ const emit = defineEmits(["close", "save"]);
 const error = ref("");
 const loading = ref(false);
 const audioFile = ref(null);
+const currentPartIndex = ref(0);
+
+const task1ImageFile = ref(null);
+const task1ImagePreview = ref(null);
+const task2ImageFile = ref(null);
+const task2ImagePreview = ref(null);
 
 const questionTypes = [
   { id: "note_completion", name: "Note Completion" },
@@ -1232,11 +753,95 @@ const questionTypes = [
   { id: "diagram_labeling", name: "Diagram Labeling" },
 ];
 
+// Add computed property for current part
+const currentPart = computed(() => {
+  if (currentPartIndex.value < 0 || currentPartIndex.value >= local.parts.length) {
+    return null;
+  }
+  return local.parts[currentPartIndex.value];
+});
+
 const uid = () => Math.random().toString(36).slice(2);
+
+/**
+ * ✅ Приводим "matching из базы" к section-level формату:
+ * - section.matchingOptions: [{_key,text}]
+ * - question.matchedOption: 'A'|'B'...
+ */
+function normalizeSectionMatching(section) {
+  if (section.questionType !== "matching") return section;
+
+  // найти anchor question, где есть matchingOptions/matchingItems
+  const anchor = (section.questions || []).find(
+      (q) => Array.isArray(q.matchingOptions) && q.matchingOptions.length
+  ) || (section.questions || [])[0];
+
+  const dbOptions = (anchor?.matchingOptions || []).slice();
+  // dbOptions: [{id,text}] уже отсортированы сервисом по label
+  const idToLetter = new Map();
+  dbOptions.forEach((o, i) => {
+    idToLetter.set(o.id, String.fromCharCode(65 + i));
+  });
+
+  // items mapping: item_text -> correct_option_id
+  const itemMap = new Map();
+  (anchor?.matchingItems || []).forEach((it) => {
+    if (it?.name) itemMap.set(it.name, it.matchedOption ?? null);
+  });
+
+  // section-level options
+  section.matchingOptions = dbOptions.map((o) => ({
+    _key: uid(),
+    text: o.text ?? "",
+  }));
+
+  // set each question.matchedOption as LETTER
+  section.questions = (section.questions || []).map((q) => {
+    const correctId = itemMap.get(q.text) ?? null; // сопоставляем по тексту
+    return {
+      ...q,
+      matchedOption: correctId ? (idToLetter.get(correctId) || "") : (q.matchedOption || ""),
+    };
+  });
+
+  return section;
+}
 
 function ensureShape(test) {
   const t = test || {};
   const type = props.type || t.type || "reading";
+
+  if (type === "writing") {
+    const tasks = t.tasks || {};
+    const task1 = tasks.task1 || {};
+    const task2 = tasks.task2 || {};
+    return {
+      id: t.id,
+      type,
+      title: t.title || "",
+      duration: Number(t.duration ?? 60),
+      description: t.description || "",
+      audio_url: null,
+      parts: [],
+      tasks: {
+        task1: {
+          title: task1.title || "",
+          question: task1.question || "",
+          minWords: Number(task1.minWords ?? 150),
+          recommendedTime: Number(task1.recommendedTime ?? 20),
+          imageUrl: task1.imageUrl ?? null,
+        },
+        task2: {
+          title: task2.title || "",
+          question: task2.question || "",
+          minWords: Number(task2.minWords ?? 250),
+          recommendedTime: Number(task2.recommendedTime ?? 40),
+          essayType: task2.essayType ?? "opinion",
+          imageUrl: task2.imageUrl ?? null,
+        },
+      },
+    };
+  }
 
   return {
     id: t.id,
@@ -1245,92 +850,68 @@ function ensureShape(test) {
     duration: Number(t.duration ?? 60),
     description: t.description || "",
     audio_url: t.audio_url || null,
+    tasks: null,
 
     parts: Array.isArray(t.parts) && t.parts.length
         ? t.parts.map((p) => ({
           _key: uid(),
           description: p.description || "",
-          sections: Array.isArray(p.sections) && p.sections.length
-              ? p.sections.map((s) => ({
-                _key: uid(),
-                title: s.title || "",
-                content: s.content || "",
-                imageUrl: s.image_url || s.imageUrl || null,
-                imageFile: null,
-                imagePreview: s.image_url || s.imageUrl || null,
-                questionType: s.questionType || s.question_type || "note_completion",
-                questions: Array.isArray(s.questions) && s.questions.length
-                    ? s.questions.map((q) => ({
-                      _key: uid(),
-                      text: q.text || "",
-                      answer: q.answer ?? "",
-                      answers: Array.isArray(q.answers) ? q.answers : [],
-                      options: Array.isArray(q.options)
-                          ? q.options.map((o) => ({
-                            _key: uid(),
-                            id: o.id ?? uid(),
-                            text: o.text ?? "",
-                          }))
-                          : [],
-                      correctOption: q.correctOption ?? null,
-                      matchingItems: Array.isArray(q.matchingItems)
-                          ? q.matchingItems.map((it) => ({
-                            _key: uid(),
-                            name: it.name ?? "",
-                            matchedOption: it.matchedOption ?? null,
-                          }))
-                          : [],
-                      matchingOptions: Array.isArray(q.matchingOptions)
-                          ? q.matchingOptions.map((op) => ({
-                            _key: uid(),
-                            id: op.id ?? uid(),
-                            text: op.text ?? "",
-                          }))
-                          : [],
-                    }))
-                    : [
-                      {
-                        _key: uid(),
-                        text: "",
-                        answer: "",
-                        answers: [],
-                        options: [],
-                        correctOption: null,
-                        matchingItems: [],
-                        matchingOptions: [],
-                      },
-                    ],
-              }))
-              : [
-                {
-                  _key: uid(),
-                  title: "",
-                  content: "",
-                  imageUrl: null,
-                  imageFile: null,
-                  imagePreview: null,
-                  questionType: "note_completion",
-                  questions: [
+          sections: (Array.isArray(p.sections) ? p.sections : []).map((s) => {
+            const sec = {
+              _key: uid(),
+              title: s.title || "",
+              content: s.content || "",
+              imageUrl: s.image_url || s.imageUrl || null,
+              imageFile: null,
+              imagePreview: s.image_url || s.imageUrl || null,
+              questionType: s.questionType || s.question_type || "note_completion",
+              matchingOptions: Array.isArray(s.matchingOptions) ? s.matchingOptions : [],
+              questions: Array.isArray(s.questions) && s.questions.length
+                  ? s.questions.map((q) => ({
+                    _key: uid(),
+                    text: q.text || "",
+                    answer: q.answer ?? "",
+                    answers: Array.isArray(q.answers) ? q.answers : [],
+                    options: Array.isArray(q.options)
+                        ? q.options.map((o) => ({ _key: uid(), id: o.id ?? uid(), text: o.text ?? "" }))
+                        : [],
+                    correctOption: q.correctOption ?? null,
+
+                    // из базы может прийти
+                    matchingItems: Array.isArray(q.matchingItems)
+                        ? q.matchingItems.map((it) => ({ _key: uid(), name: it.name ?? "", matchedOption: it.matchedOption ?? null }))
+                        : [],
+                    matchingOptions: Array.isArray(q.matchingOptions)
+                        ? q.matchingOptions.map((op) => ({ _key: uid(), id: op.id ?? uid(), text: op.text ?? "" }))
+                        : [],
+
+                    // section-level поле (после normalize будет буква)
+                    matchedOption: q.matchedOption || "",
+                  }))
+                  : [
                     {
                       _key: uid(),
                       text: "",
                       answer: "",
-                      answers: [],
+                      answers: [""],
                       options: [],
                       correctOption: null,
                       matchingItems: [],
                       matchingOptions: [],
+                      matchedOption: "",
                     },
                   ],
-                },
-              ],
+            };
+
+            return normalizeSectionMatching(sec);
+          }),
         }))
         : [
           {
             _key: uid(),
             description: "",
             sections: [
-              {
+              normalizeSectionMatching({
                 _key: uid(),
                 title: "",
                 content: "",
@@ -1338,6 +919,7 @@ function ensureShape(test) {
                 imageFile: null,
                 imagePreview: null,
                 questionType: "note_completion",
+                matchingOptions: [],
                 questions: [
                   {
                     _key: uid(),
@@ -1348,9 +930,10 @@ function ensureShape(test) {
                     correctOption: null,
                     matchingItems: [],
                     matchingOptions: [],
+                    matchedOption: "",
                   },
                 ],
-              },
+              }),
             ],
           },
         ],
@@ -1365,6 +948,7 @@ watch(
       Object.assign(local, ensureShape({ ...v, type: props.type }));
       audioFile.value = null;
       error.value = "";
+      currentPartIndex.value = 0; // Reset to first part when test changes
     },
     { deep: true, immediate: true }
 );
@@ -1377,6 +961,36 @@ const handleAudioUpload = (event) => {
   audioFile.value = file;
 };
 
+// writing images
+const handleTask1ImageUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  task1ImageFile.value = file;
+  if (task1ImagePreview.value?.startsWith("blob:")) URL.revokeObjectURL(task1ImagePreview.value);
+  task1ImagePreview.value = URL.createObjectURL(file);
+};
+const removeTask1Image = () => {
+  if (task1ImagePreview.value?.startsWith("blob:")) URL.revokeObjectURL(task1ImagePreview.value);
+  task1ImagePreview.value = null;
+  task1ImageFile.value = null;
+  local.tasks.task1.imageUrl = null;
+};
+
+const handleTask2ImageUpload = (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  task2ImageFile.value = file;
+  if (task2ImagePreview.value?.startsWith("blob:")) URL.revokeObjectURL(task2ImagePreview.value);
+  task2ImagePreview.value = URL.createObjectURL(file);
+};
+const removeTask2Image = () => {
+  if (task2ImagePreview.value?.startsWith("blob:")) URL.revokeObjectURL(task2ImagePreview.value);
+  task2ImagePreview.value = null;
+  task2ImageFile.value = null;
+  local.tasks.task2.imageUrl = null;
+};
+
+// section image
 const handleSectionImageUpload = (event, partIndex, sectionIndex) => {
   const file = event.target.files?.[0];
   if (!file) return;
@@ -1401,76 +1015,92 @@ const removeSectionImage = (partIndex, sectionIndex) => {
   section.imageUrl = null;
 };
 
+const createEmptyQuestion = () => ({
+  _key: uid(),
+  text: "",
+  answer: "",
+  answers: [],
+  options: [],
+  correctOption: null,
+  matchedOption: "", // for matching
+});
+
+const createEmptySection = () => ({
+  _key: uid(),
+  title: "",
+  content: "",
+  imageUrl: null,
+  imageFile: null,
+  imagePreview: null,
+  questionType: "note_completion",
+  questions: [{ ...createEmptyQuestion(), answers: [""] }],
+  matchingOptions: [],
+});
+
+const maxPartsByType = () => {
+  if (local.type === "writing") return 2;
+  return 4;
+};
+
 const addPart = () => {
+  const max = maxPartsByType();
+  if (local.parts.length >= max) {
+    error.value = `You can create only ${max} parts for ${local.type}.`;
+    return;
+  }
+
   local.parts.push({
     _key: uid(),
     description: "",
-    sections: [
-      {
-        _key: uid(),
-        title: "",
-        content: "",
-        imageUrl: null,
-        imageFile: null,
-        imagePreview: null,
-        questionType: "note_completion",
-        questions: [
-          {
-            _key: uid(),
-            text: "",
-            answer: "",
-            answers: [""],
-            options: [],
-            correctOption: null,
-            matchingItems: [],
-            matchingOptions: [],
-          },
-        ],
-      },
-    ],
+    sections: [createEmptySection()],
   });
+
+  currentPartIndex.value = local.parts.length - 1;
 };
+
+// const addPart = () => {
+//   local.parts.push({
+//     _key: uid(),
+//     description: "",
+//     sections: [createEmptySection()],
+//   });
+//   // Auto-switch to the newly added part
+//   currentPartIndex.value = local.parts.length - 1;
+// };
 
 const removePart = (partIndex) => {
   local.parts.splice(partIndex, 1);
+  // Adjust current part index if we removed the current part
+  if (currentPartIndex.value >= local.parts.length) {
+    currentPartIndex.value = Math.max(0, local.parts.length - 1);
+  }
 };
 
 const addSection = (partIndex) => {
-  local.parts[partIndex].sections.push({
-    _key: uid(),
-    title: "",
-    content: "",
-    imageUrl: null,
-    imageFile: null,
-    imagePreview: null,
-    questionType: "note_completion",
-    questions: [
-      {
-        _key: uid(),
-        text: "",
-        answer: "",
-        answers: [""],
-        options: [],
-        correctOption: null,
-        matchingItems: [],
-        matchingOptions: [],
-      },
-    ],
-  });
+  if (partIndex >= 0 && partIndex < local.parts.length) {
+    local.parts[partIndex].sections.push(createEmptySection());
+  }
 };
 
 const removeSection = (partIndex, sectionIndex) => {
-  local.parts[partIndex].sections.splice(sectionIndex, 1);
+  if (partIndex >= 0 && partIndex < local.parts.length) {
+    const part = local.parts[partIndex];
+    if (sectionIndex >= 0 && sectionIndex < part.sections.length) {
+      part.sections.splice(sectionIndex, 1);
+    }
+  }
 };
 
 const setSectionQuestionType = (partIndex, sectionIndex, type) => {
   const section = local.parts[partIndex].sections[sectionIndex];
   section.questionType = type;
 
+  // normalize for each existing question
   section.questions.forEach((q) => {
     if (type === "note_completion") {
       if (!Array.isArray(q.answers) || q.answers.length < 1) q.answers = [""];
     }
+
     if (type === "multiple_choice") {
       if (!Array.isArray(q.options) || q.options.length < 2) {
         q.options = [
@@ -1480,16 +1110,16 @@ const setSectionQuestionType = (partIndex, sectionIndex, type) => {
       }
       if (!q.correctOption) q.correctOption = q.options[0]?.id ?? null;
     }
+
     if (type === "matching") {
-      if (!Array.isArray(q.matchingOptions) || q.matchingOptions.length < 2) {
-        q.matchingOptions = [
-          { _key: uid(), id: uid(), text: "" },
-          { _key: uid(), id: uid(), text: "" },
+      // section-level options
+      if (!Array.isArray(section.matchingOptions) || section.matchingOptions.length < 2) {
+        section.matchingOptions = [
+          { _key: uid(), text: "" },
+          { _key: uid(), text: "" },
         ];
       }
-      if (!Array.isArray(q.matchingItems) || q.matchingItems.length < 1) {
-        q.matchingItems = [{ _key: uid(), name: "", matchedOption: null }];
-      }
+      if (!q.matchedOption) q.matchedOption = "";
     }
   });
 };
@@ -1498,16 +1128,7 @@ const addQuestion = (partIndex, sectionIndex) => {
   const section = local.parts[partIndex].sections[sectionIndex];
   const qt = section.questionType;
 
-  const q = {
-    _key: uid(),
-    text: "",
-    answer: "",
-    answers: [],
-    options: [],
-    correctOption: null,
-    matchingItems: [],
-    matchingOptions: [],
-  };
+  const q = createEmptyQuestion();
 
   if (qt === "note_completion") q.answers = [""];
   if (qt === "multiple_choice") {
@@ -1517,12 +1138,15 @@ const addQuestion = (partIndex, sectionIndex) => {
     ];
     q.correctOption = q.options[0].id;
   }
+
   if (qt === "matching") {
-    q.matchingOptions = [
-      { _key: uid(), id: uid(), text: "" },
-      { _key: uid(), id: uid(), text: "" },
-    ];
-    q.matchingItems = [{ _key: uid(), name: "", matchedOption: null }];
+    if (!Array.isArray(section.matchingOptions) || section.matchingOptions.length < 2) {
+      section.matchingOptions = [
+        { _key: uid(), text: "" },
+        { _key: uid(), text: "" },
+      ];
+    }
+    q.matchedOption = "";
   }
 
   section.questions.push(q);
@@ -1553,30 +1177,23 @@ const removeOption = (partIndex, sectionIndex, qIndex, optIndex) => {
   if (removed && q.correctOption === removed.id) q.correctOption = q.options[0]?.id ?? null;
 };
 
-const addMatchingItem = (partIndex, sectionIndex, qIndex) => {
-  const q = local.parts[partIndex].sections[sectionIndex].questions[qIndex];
-  if (!Array.isArray(q.matchingItems)) q.matchingItems = [];
-  q.matchingItems.push({ _key: uid(), name: "", matchedOption: null });
-};
-const removeMatchingItem = (partIndex, sectionIndex, qIndex, itemIndex) => {
-  const q = local.parts[partIndex].sections[sectionIndex].questions[qIndex];
-  q.matchingItems.splice(itemIndex, 1);
+// section-level matching options
+const addMatchingOption = (partIndex, sectionIndex) => {
+  const section = local.parts[partIndex].sections[sectionIndex];
+  if (!Array.isArray(section.matchingOptions)) section.matchingOptions = [];
+  section.matchingOptions.push({ _key: uid(), text: "" });
 };
 
-const addMatchingOption = (partIndex, sectionIndex, qIndex) => {
-  const q = local.parts[partIndex].sections[sectionIndex].questions[qIndex];
-  if (!Array.isArray(q.matchingOptions)) q.matchingOptions = [];
-  q.matchingOptions.push({ _key: uid(), id: uid(), text: "" });
-};
+const removeMatchingOption = (partIndex, sectionIndex, optIndex) => {
+  const section = local.parts[partIndex].sections[sectionIndex];
+  section.matchingOptions.splice(optIndex, 1);
 
-const removeMatchingOption = (partIndex, sectionIndex, qIndex, optIndex) => {
-  const q = local.parts[partIndex].sections[sectionIndex].questions[qIndex];
-  const removed = q.matchingOptions.splice(optIndex, 1)[0];
-  if (removed?.id) {
-    q.matchingItems?.forEach((it) => {
-      if (it.matchedOption === removed.id) it.matchedOption = null;
-    });
-  }
+  // если учитель удалил option — сбрасываем matchedOption у вопросов, если буква выходит за пределы
+  const maxLetter = String.fromCharCode(65 + (section.matchingOptions.length - 1));
+  section.questions.forEach((q) => {
+    if (!q.matchedOption) return;
+    if (q.matchedOption > maxLetter) q.matchedOption = "";
+  });
 };
 
 const getQuestionPlaceholder = (type, index) => {
@@ -1598,6 +1215,41 @@ const getQuestionPlaceholder = (type, index) => {
   }
 };
 
+/** ✅ global numbering */
+const getGlobalSectionNumber = (partIndex, sectionIndex) => {
+  let count = 0;
+  for (let p = 0; p < local.parts.length; p++) {
+    const secLen = local.parts[p].sections.length;
+    if (p < partIndex) count += secLen;
+  }
+  return count + sectionIndex + 1;
+};
+
+const getGlobalQuestionNumber = (partIndex, sectionIndex, qIndex) => {
+  let count = 0;
+  for (let p = 0; p < local.parts.length; p++) {
+    for (let s = 0; s < local.parts[p].sections.length; s++) {
+      const qLen = local.parts[p].sections[s].questions.length;
+      if (p < partIndex) count += qLen;
+      else if (p === partIndex && s < sectionIndex) count += qLen;
+    }
+  }
+  return count + qIndex + 1;
+};
+
+// Add these functions for part navigation
+const prevPart = () => {
+  if (currentPartIndex.value > 0) {
+    currentPartIndex.value--;
+  }
+};
+
+const nextPart = () => {
+  if (currentPartIndex.value < local.parts.length - 1) {
+    currentPartIndex.value++;
+  }
+};
+
 const save = async () => {
   error.value = "";
 
@@ -1610,14 +1262,45 @@ const save = async () => {
     return;
   }
 
-  // ✅ payload without audioFile by default
+  // ✅ writing payload
+  if (local.type === "writing") {
+    const payload = {
+      id: local.id,
+      type: local.type,
+      title: local.title,
+      duration: Number(local.duration),
+      description: local.description,
+      tasks: {
+        task1: {
+          ...local.tasks.task1,
+          imageFile: task1ImageFile.value || null,
+        },
+        task2: {
+          ...local.tasks.task2,
+          imageFile: task2ImageFile.value || null,
+        },
+      },
+    };
+
+    try {
+      loading.value = true;
+      await emit("save", payload);
+    } catch (e) {
+      error.value = e?.message || "Failed to save";
+    } finally {
+      loading.value = false;
+    }
+    return;
+  }
+
+  // ✅ listening/reading payload (with section-level matching)
   const payload = {
     id: local.id,
     type: local.type,
     title: local.title,
     duration: Number(local.duration),
     description: local.description,
-    parts: local.parts.map((p) => ({
+    parts: local.parts.map((p, index) => ({
       description: p.description,
       sections: p.sections.map((s) => ({
         title: s.title,
@@ -1625,34 +1308,32 @@ const save = async () => {
         questionType: s.questionType,
         imageFile: s.imageFile,
         imageUrl: s.imageUrl,
-        questions: s.questions.map((q) => ({
-          id: q.id, // ✅ важно для update
+
+        // ✅ IMPORTANT: section-level matchingOptions
+        matchingOptions: s.questionType === "matching"
+            ? (s.matchingOptions || []).map((o) => ({ text: o.text }))
+            : [],
+
+        questions: (s.questions || []).map((q) => ({
+          id: q.id,
           text: q.text,
           answer: q.answer,
           answers: q.answers,
           options: q.options?.map((o) => ({ id: o.id, text: o.text })) || [],
           correctOption: q.correctOption,
-          matchingItems: q.matchingItems?.map((it) => ({
-            name: it.name,
-            matchedOption: it.matchedOption,
-          })) || [],
-          matchingOptions: q.matchingOptions?.map((o) => ({
-            id: o.id,
-            text: o.text,
-          })) || [],
+
+          // ✅ IMPORTANT: for matching — store letter
+          matchedOption: s.questionType === "matching" ? (q.matchedOption || "") : undefined,
         })),
       })),
     })),
   };
 
-  // ✅ ONLY listening can send audioFile
-  if (local.type === "listening") {
-    payload.audioFile = audioFile.value || null;
-  }
+  if (local.type === "listening") payload.audioFile = audioFile.value || null;
 
   try {
     loading.value = true;
-    await emit("save", payload); // родитель делает update в supabase
+    await emit("save", payload);
   } catch (e) {
     error.value = e?.message || "Failed to save";
   } finally {
@@ -1664,11 +1345,19 @@ const loadFullTest = async () => {
   loadingFull.value = true;
   error.value = "";
   try {
-    // ВАЖНО: тут мы получаем ВСЮ структуру
-    const full = await testService.getFullTest(props.type, props.test.id)
-
-    // обновляем local (чтобы появились parts/sections/questions)
+    const full = await testService.getFullTest(props.type, props.test.id);
     Object.assign(local, ensureShape({ ...full, type: props.type }));
+
+    // init writing previews from DB
+    if (props.type === "writing") {
+      task1ImagePreview.value = local.tasks?.task1?.imageUrl || null;
+      task2ImagePreview.value = local.tasks?.task2?.imageUrl || null;
+      task1ImageFile.value = null;
+      task2ImageFile.value = null;
+    }
+
+    // Reset to first part when loading
+    currentPartIndex.value = 0;
   } catch (e) {
     console.error(e);
     error.value = e.message || "Failed to load test details";
@@ -1678,11 +1367,5 @@ const loadFullTest = async () => {
 };
 
 onMounted(loadFullTest);
-watch(
-    () => [props.test?.id, props.type],
-    () => loadFullTest(),
-    { immediate: true }
-);
+watch(() => [props.test?.id, props.type], () => loadFullTest(), { immediate: true });
 </script>
-
-
