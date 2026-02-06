@@ -17,7 +17,7 @@
 
         <!-- Body -->
         <div class="p-6 h-[78vh] overflow-y-auto">
-          <!-- ✅ LOADING FULL TEST -->
+          <!-- LOADING FULL TEST -->
           <div v-if="loadingFull" class="space-y-4">
             <div class="flex items-center gap-3">
               <div class="h-10 w-10 rounded-xl bg-gray-200 animate-pulse"></div>
@@ -41,7 +41,7 @@
             </div>
           </div>
 
-          <!-- ✅ REAL FORM -->
+          <!-- REAL FORM -->
           <div v-else>
             <div v-if="error" class="mb-4 p-3 rounded-xl bg-red-50 text-red-700 border border-red-200">
               {{ error }}
@@ -100,7 +100,7 @@
               </div>
             </div>
 
-            <!-- ✅ WRITING UI -->
+            <!--  WRITING UI -->
             <div v-if="type === 'writing'" class="mt-6 space-y-6">
               <!-- Task 1 -->
               <div class="border-2 border-blue-200 rounded-2xl p-5 bg-blue-50">
@@ -278,7 +278,7 @@
               </div>
             </div>
 
-            <!-- ✅ LISTENING/READING UI -->
+            <!--  LISTENING/READING UI -->
             <div v-else class="mt-6">
               <!-- Part Navigation Header -->
               <div class="flex items-center justify-between mb-6">
@@ -472,7 +472,7 @@
                         </div>
                       </div>
 
-                      <!-- ✅ NON-MATCHING QUESTIONS -->
+                      <!--  NON-MATCHING QUESTIONS -->
                       <div v-if="section.questionType !== 'matching'" class="space-y-3">
                         <div
                             v-for="(question, qIndex) in section.questions"
@@ -586,7 +586,7 @@
                         </button>
                       </div>
 
-                      <!-- ✅ MATCHING (SECTION LEVEL) -->
+                      <!--  MATCHING (SECTION LEVEL) -->
                       <div v-else class="space-y-6">
                         <div class="flex items-center justify-between">
                           <label class="block text-sm font-medium text-gray-700">
@@ -762,12 +762,6 @@ const currentPart = computed(() => {
 });
 
 const uid = () => Math.random().toString(36).slice(2);
-
-/**
- * ✅ Приводим "matching из базы" к section-level формату:
- * - section.matchingOptions: [{_key,text}]
- * - question.matchedOption: 'A'|'B'...
- */
 function normalizeSectionMatching(section) {
   if (section.questionType !== "matching") return section;
 
@@ -1293,7 +1287,7 @@ const save = async () => {
     return;
   }
 
-  // ✅ listening/reading payload (with section-level matching)
+  //  listening/reading payload (with section-level matching)
   const payload = {
     id: local.id,
     type: local.type,

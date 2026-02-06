@@ -516,14 +516,6 @@
                   </div>
                 </div>
               </div>
-
-              <!-- Add Part Button -->
-<!--              <button-->
-<!--                  @click="addPart"-->
-<!--                  class="w-full py-3 border-2 border-dashed border-blue-300 rounded-lg text-blue-600 hover:text-blue-800 hover:border-blue-400 bg-blue-50 transition-colors"-->
-<!--              >-->
-<!--                + Add New Part-->
-<!--              </button>-->
               <button
                   @click="addPart"
                   :disabled="testParts.length >= 4"
@@ -882,7 +874,7 @@ const createEmptySection = () => ({
   imagePreview: null,
   questionType: "note_completion",
   questions: [createEmptyQuestion()],
-  matchingOptions: [], // ✅ SECTION LEVEL
+  matchingOptions: [], //  SECTION LEVEL
 });
 
 const createEmptyPart = () => ({
@@ -1091,7 +1083,7 @@ const closeModal = () => {
   resetForm();
 };
 
-// ✅ IMPORTANT: partsPayload must include section.matchingOptions now
+// IMPORTANT: partsPayload must include section.matchingOptions now
 const buildPartsPayload = () =>
     testParts.map((p) => ({
       description: p.description,
@@ -1104,245 +1096,6 @@ const buildPartsPayload = () =>
         imageFile: s.imageFile, // (не отправляем в testData, но держим для saveTest upload)
       })),
     }));
-
-// const saveTest = async () => {
-//   try {
-//     loading.value = true;
-//     error.value = "";
-//
-//     if (!currentUser.value) throw new Error("You must be logged in to create tests");
-//     if (currentUser.value.profile?.role !== "teacher") throw new Error("Only teachers can create tests");
-//     if (!testTitle.value.trim()) throw new Error("Test title is required");
-//
-//     // Validate questions exist
-//     if (selectedTestType.value === "listening" || selectedTestType.value === "reading") {
-//       let totalQuestions = 0;
-//       testParts.forEach((part) => part.sections.forEach((section) => (totalQuestions += section.questions.length)));
-//       if (totalQuestions === 0) throw new Error("At least one question is required");
-//     }
-//
-//     // matching validation
-//     testParts.forEach((p, pi) => {
-//       p.sections.forEach((s, si) => {
-//         if (s.questionType === "matching") {
-//           const opts = (s.matchingOptions || []).filter((o) => (o.text ?? "").trim() !== "");
-//           if (opts.length < 2) throw new Error(`Part ${pi + 1}, Section ${si + 1}: Matching needs at least 2 options`);
-//
-//           // each question should have matchedOption
-//           s.questions.forEach((q, qi) => {
-//             if (!q.text?.trim()) throw new Error(`Part ${pi + 1}, Section ${si + 1}: Item ${qi + 1} text is empty`);
-//             if (!q.matchedOption) throw new Error(`Part ${pi + 1}, Section ${si + 1}: Item ${qi + 1} missing matched option`);
-//           });
-//         }
-//       });
-//     });
-//
-//     const userId = currentUser.value.id;
-//
-//     const partsPayload = buildPartsPayload();
-//     const testData = {
-//       title: testTitle.value,
-//       duration: testDuration.value,
-//       description: writingDescription.value,
-//       parts: partsPayload.map((p) => ({
-//         description: p.description,
-//         sections: p.sections.map((s) => ({
-//           title: s.title,
-//           content: s.content,
-//           questionType: s.questionType,
-//           matchingOptions: s.matchingOptions || [],
-//           questions: s.questions,
-//         })),
-//       })),
-//     };
-//
-//     let result;
-//
-//     // ---------------- LISTENING ----------------
-//     if (selectedTestType.value === "listening") {
-//       const testResult = await testService.createListeningTest({ ...testData, audioUrl: null }, userId);
-//       result = testResult;
-//
-//       if (audioFile.value) {
-//         try {
-//           const audioUrl = await testService.uploadAudio(audioFile.value, testResult.id);
-//           await testService.updateListeningTestAudio(testResult.id, audioUrl);
-//         } catch (e) {
-//           console.error("Audio upload failed:", e);
-//         }
-//       }
-//
-//       // create sections/questions
-//       for (let partIndex = 0; partIndex < testParts.length; partIndex++) {
-//         const part = testParts[partIndex];
-//
-//         for (let sectionIndex = 0; sectionIndex < part.sections.length; sectionIndex++) {
-//           const section = part.sections[sectionIndex];
-//
-//           let imageUrl = null;
-//           if (section.imageFile) {
-//             try {
-//               imageUrl = await testService.uploadSectionImage(section.imageFile, testResult.id, partIndex + 1, sectionIndex + 1);
-//             } catch (e) {
-//               console.error("Section image upload failed:", e);
-//             }
-//           }
-//
-//           const sectionResult = await testService.createListeningSection(
-//               { title: section.title, content: section.content, questionType: section.questionType, imageUrl },
-//               testResult.id,
-//               partIndex + 1,
-//               sectionIndex + 1
-//           );
-//
-//           for (let qIndex = 0; qIndex < section.questions.length; qIndex++) {
-//             const q = section.questions[qIndex];
-//
-//             const createdQ = await testService.createListeningQuestion(
-//                 { text: q.text, type: section.questionType, order_number: qIndex + 1 },
-//                 sectionResult.id,
-//                 qIndex + 1
-//             );
-//
-//             if (section.questionType === "multiple_choice") {
-//               await testService.createListeningOptions(createdQ.id, q.options, q.correctOption);
-//             }
-//
-//             if (section.questionType === "note_completion") {
-//               await testService.createListeningAnswers(createdQ.id, q.answers);
-//             }
-//
-//             // ✅ SECTION LEVEL MATCHING (once)
-//             if (section.questionType === "matching" && qIndex === 0) {
-//               const createdOptions = await testService.createListeningMatchingOptions(createdQ.id, section.matchingOptions || []);
-//               await testService.createListeningMatchingItems(createdQ.id, section.questions || [], createdOptions);
-//             }
-//           }
-//         }
-//       }
-//     }
-//
-//     // ---------------- READING ----------------
-//     else if (selectedTestType.value === "reading") {
-//       const testResult = await testService.createReadingTest(testData, userId);
-//       result = testResult;
-//
-//       for (let partIndex = 0; partIndex < testParts.length; partIndex++) {
-//         const part = testParts[partIndex];
-//
-//         for (let sectionIndex = 0; sectionIndex < part.sections.length; sectionIndex++) {
-//           const section = part.sections[sectionIndex];
-//
-//           let imageUrl = null;
-//           if (section.imageFile) {
-//             try {
-//               imageUrl = await testService.uploadSectionImage(section.imageFile, testResult.id, partIndex + 1, sectionIndex + 1);
-//             } catch (e) {
-//               console.error("Section image upload failed:", e);
-//             }
-//           }
-//
-//           const sectionResult = await testService.createReadingSection(
-//               { title: section.title, content: section.content, questionType: section.questionType, imageUrl },
-//               testResult.id,
-//               sectionIndex + 1
-//           );
-//
-//           for (let qIndex = 0; qIndex < section.questions.length; qIndex++) {
-//             const q = section.questions[qIndex];
-//
-//             const createdQ = await testService.createReadingQuestion(
-//                 { text: q.text, type: section.questionType, order_number: qIndex + 1 },
-//                 sectionResult.id,
-//                 qIndex + 1
-//             );
-//
-//             if (section.questionType === "note_completion") {
-//               await testService.createReadingAnswers(createdQ.id, q.answers);
-//             }
-//
-//             if (section.questionType === "multiple_choice") {
-//               if (q.correctOption === undefined || q.correctOption === null) throw new Error("Correct option not selected");
-//               const validOptions = (q.options || []).filter((opt) => opt.text && opt.text.trim() !== "");
-//               await testService.createReadingOptions(createdQ.id, validOptions, q.correctOption);
-//             }
-//
-//             // ✅ SECTION LEVEL MATCHING (once)
-//             if (section.questionType === "matching" && qIndex === 0) {
-//               const createdOptions = await testService.createReadingMatchingOptions(createdQ.id, section.matchingOptions || []);
-//               await testService.createReadingMatchingItems(createdQ.id, section.questions || [], createdOptions);
-//             }
-//           }
-//         }
-//       }
-//     }
-//
-//     // ---------------- WRITING ----------------
-//     else if (selectedTestType.value === "writing") {
-//       const testResult = await testService.createWritingTest(
-//           {
-//             ...testData,
-//             tasks: {
-//               task1: {
-//                 title: writingTasks.task1.title,
-//                 question: writingTasks.task1.question,
-//                 minWords: writingTasks.task1.minWords,
-//                 recommendedTime: writingTasks.task1.recommendedTime,
-//                 imageUrl: null,
-//               },
-//               task2: {
-//                 title: writingTasks.task2.title,
-//                 question: writingTasks.task2.question,
-//                 minWords: writingTasks.task2.minWords,
-//                 recommendedTime: writingTasks.task2.recommendedTime,
-//                 essayType: writingTasks.task2.essayType,
-//                 imageUrl: null,
-//               },
-//             },
-//           },
-//           userId
-//       );
-//
-//       result = testResult;
-//
-//       if (writingTasks.task1.imageFile) {
-//         try {
-//           const url = await testService.uploadWritingImage(writingTasks.task1.imageFile, testResult.id, 1);
-//           await testService.updateWritingTestImage(testResult.id, 1, url);
-//         } catch (e) {
-//           console.error("Task 1 image upload failed:", e);
-//         }
-//       }
-//
-//       if (writingTasks.task2.imageFile) {
-//         try {
-//           const url = await testService.uploadWritingImage(writingTasks.task2.imageFile, testResult.id, 2);
-//           await testService.updateWritingTestImage(testResult.id, 2, url);
-//         } catch (e) {
-//           console.error("Task 2 image upload failed:", e);
-//         }
-//       }
-//     }
-//
-//     emit("saved", { type: selectedTestType.value, id: result.id, title: testTitle.value });
-//     alert(`${selectedTestType.value.charAt(0).toUpperCase() + selectedTestType.value.slice(1)} test created successfully!`);
-//     resetForm();
-//   } catch (err) {
-//     console.error("Error saving test:", err);
-//     error.value = err.message || "Failed to save test. Please try again.";
-//     alert(`Error: ${err.message}\n\nCheck console for details.`);
-//   } finally {
-//     loading.value = false;
-//   }
-//
-//   // optional debug
-//   try {
-//     const { data: buckets } = await supabase.storage.listBuckets();
-//     console.log("Available buckets:", buckets?.map((b) => b.name));
-//   } catch (e) {
-//     // ignore
-//   }
-// };
 const saveTest = async () => {
   try {
     loading.value = true;
@@ -1453,7 +1206,7 @@ const saveTest = async () => {
               await testService.createListeningAnswers(createdQ.id, q.answers);
             }
 
-            // ✅ MATCHING (SECTION LEVEL) — сохранить ОДИН РАЗ на секцию + correct_option_id
+            //  MATCHING (SECTION LEVEL) — сохранить ОДИН РАЗ на секцию + correct_option_id
             if (section.questionType === "matching" && qIndex === 0) {
               // 1) создаём options (A,B,C...) и получаем rows с option_label + id
               const createdOptions = await testService.createListeningMatchingOptions(

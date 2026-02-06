@@ -31,15 +31,14 @@ function groupByPartSafe(type: "listening" | "reading", sections: any[]) {
         map.get(partNum).sections.push({
             id: s.id,
 
-            // ✅ listening: title/content
-            // ✅ reading: passage_title/passage_text
+
             title: isReading ? (s.passage_title ?? s.title ?? "") : (s.title ?? ""),
             content: isReading ? (s.passage_text ?? s.content ?? "") : (s.content ?? ""),
 
             image_url: s.image_url ?? null,
             question_type: s.question_type ?? "note_completion",
 
-            // ✅ главный сортировочный ключ
+
             order_number: Number(
                 s.order_number ??
                 // fallback
@@ -47,12 +46,11 @@ function groupByPartSafe(type: "listening" | "reading", sections: any[]) {
                 0
             ),
 
-            // оставляем section_number, если где-то нужен
             section_number: Number(s.section_number ?? s.order_number ?? 0),
 
             questions: [],
 
-            // ✅ matching section-level
+            //  matching section-level
             matchingOptions: [],
         });
     }
@@ -84,7 +82,7 @@ async function getFullListeningTest(testId: string) {
         .single();
     if (testErr) throw testErr;
 
-    // пробуем сортировку part_number
+
     const { data: sections, error: secErr } = await supabase
         .from("listening_sections")
         .select("*")
@@ -166,7 +164,6 @@ async function hydrateListening(test: any, sections: any[]) {
         const qType = q.question_type ?? s.question_type ?? "note_completion";
         const optList = optionsByQ.get(q.id) || [];
 
-        // ✅ если это matching anchor (у него будут matchingOptions/items) — положим их в section
         const sectionMatchOpts = (mOptionsByQ.get(q.id) || [])
             .sort((a, b) => String(a.option_label ?? "").localeCompare(String(b.option_label ?? "")))
             .map((o) => ({ id: o.id, text: o.option_text ?? "", label: o.option_label ?? "" }));
@@ -322,7 +319,7 @@ async function getFullWritingTest(testId: string) {
 
     if (error) throw error;
 
-    // структура для UpdateTestModal
+    //  UpdateTestModal structure
     return {
         ...test,
         type: "writing",
@@ -352,7 +349,7 @@ async function updateReading(payload: any) {
 
     if (testErr) throw testErr;
 
-    // ✅ удаляем старые sections (дальше cascade удалит вопросы/ответы/опции, если настроено)
+
     const { error: delErr } = await supabase
         .from("reading_sections")
         .delete()
@@ -378,7 +375,7 @@ async function updateReading(payload: any) {
                     part_number: pIndex + 1,
                     order_number: sIndex + 1,
 
-                    // оставим section_number (если где-то UI на него смотрит)
+
                     section_number: sIndex + 1,
 
                     passage_title: s.title ?? "",
@@ -444,7 +441,7 @@ async function updateReading(payload: any) {
                 if (s.questionType === "matching" && qIndex === 0) {
                     const sectionOpts = Array.isArray(s.matchingOptions) ? s.matchingOptions : [];
 
-                    // создаём options A,B,C...
+                    // creating options A,B,C...
                     const payloadMO = sectionOpts
                         .filter((o: any) => (o.text ?? "").trim() !== "")
                         .map((o: any, i: number) => ({
@@ -618,14 +615,14 @@ async function updateListening(payload: any) {
 }
 
 async function updateWriting(payload: any) {
-    // тут ты можешь хранить writing как отдельные поля writing_tests
+
     const { error } = await supabase
         .from("writing_tests")
         .update({
             title: payload.title,
             duration: payload.duration,
             description: payload.description,
-            // если у тебя поля по task1/task2 — обновляй их тут
+
         })
         .eq("id", payload.id);
 
